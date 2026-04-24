@@ -8,9 +8,12 @@ INSERT INTO employee (employeeID, firstName, middleName, lastName, phoneNumber) 
 (3, 'Jada',         'De Asis', 'Parada',     '09191234569');
 
 INSERT INTO account (accountID, employeeID, username, role, password, status) VALUES
-(1, 1, 'janine', 'Manager', 'pass1234', 'Active'),
-(2, 2, 'barias', 'Cashier', 'pass2341', 'Active'),
-(3, 3, 'jada',   'Cashier', 'pass3412', 'Active');
+(1, 1, 'janine', 'Manager', '$2b$10$tLi91nP7RDnOcFHP7oMBRugY/WW/DsCW6RMCBwEwxdZFumoKawGSy', 'Active'),
+-- pass1234
+(2, 2, 'barias', 'Cashier', '$2b$10$8W/z/r3tzqoTyjLVY7iVRuKtzJWT6H.KoNejfZqmYP9LVSfxNgD0u', 'Active'),
+-- pass2341
+(3, 3, 'jada',   'Cashier', '$2b$10$0mk49XHN2z9aRdqE/tuilOam7hNBrIyryhshjgXq0pyioDiwqxah2', 'Active');
+-- pass3412
 
 -- INGREDIENTS (add-on backing ingredients)
 INSERT INTO ingredient (ingredientID, ingredientName, stockQuantity, minStockLevel, unit, expiryDate) VALUES
