@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
+import Inventory from './pages/Inventory/Inventory';
 import './css/App.css';
 
 // Protected Route Component
@@ -27,6 +28,11 @@ function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path = "/inventory" element={
+        <ProtectedRoute>
+            <Inventory />
         </ProtectedRoute>
       } />
       <Route path="/" element={<Navigate to="/login" replace />} />

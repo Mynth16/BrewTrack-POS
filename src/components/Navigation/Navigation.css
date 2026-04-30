@@ -1,0 +1,6 @@
+nav {
+    background-color: #43341F;
+
+    display: flex;
+    flex-direction: column;
+}
