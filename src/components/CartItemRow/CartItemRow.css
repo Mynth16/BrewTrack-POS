@@ -1,0 +1,171 @@
+:root {
+  --primary-brown: #4A3728;
+  --secondary-brown: #6B5344;
+  --text-light: #FFFFFF;
+  --accent-green: #7CB342;
+  --accent-gold: #D4A574;
+  --danger: #D32F2F;
+}
+
+.cart-item {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.cart-item-header {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cart-item-info {
+  flex: 1;
+}
+
+.cart-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: var(--text-light);
+}
+
+.cart-item-price {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cart-item-quantity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+.qty-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-radius: 3px;
+}
+
+.qty-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.cart-item-total {
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+  color: var(--accent-green);
+}
+
+.cart-item-remove {
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-radius: 3px;
+}
+
+.cart-item-remove:hover {
+  background-color: var(--danger);
+}
+
+.cart-item-addons-section {
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+}
+
+.addons-toggle {
+  width: 100%;
+  padding: 6px 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.addons-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.addons-toggle.expanded {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.addons-list {
+  margin-top: 6px;
+  padding: 6px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.addon-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  color: var(--text-light);
+}
+
+.addon-checkbox:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.addon-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent-green);
+}
+
+.addon-name {
+  flex: 1;
+}
+
+.addon-price {
+  color: var(--accent-gold);
+  font-weight: 600;
+}

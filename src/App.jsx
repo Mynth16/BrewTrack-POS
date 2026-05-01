@@ -4,6 +4,8 @@ import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Inventory from './pages/Inventory/Inventory';
 import './css/App.css';
+import Pos from './pages/Pos/Pos';
+import { CartProvider } from './context/CartContext';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -30,6 +32,11 @@ function AppRoutes() {
           <Dashboard />
         </ProtectedRoute>
       } />
+      <Route path="/pos" element={
+        <ProtectedRoute>
+          <Pos />
+        </ProtectedRoute>
+      } />
       <Route path = "/inventory" element={
         <ProtectedRoute>
             <Inventory />
@@ -45,7 +52,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );
