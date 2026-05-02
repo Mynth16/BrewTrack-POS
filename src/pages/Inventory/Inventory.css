@@ -26,8 +26,11 @@ section {
 
 .inventory-list {
     display: flex;
+    flex-direction: column;
     width: 90%;
     height: 90%;
+    color: white;
+    overflow-y: auto;
 
     border-radius: 8px;
     background: linear-gradient(to top, #000000, #43341F);
@@ -36,7 +39,16 @@ section {
 .inventory-list form {
     padding: 20px 20px 10px 20px;
     border-radius: 8px;
+}
 
+table {
+    border-collapse: collapse;
+    margin: 10px;
+}
 
-    background: linear-gradient(to top, #000000, #43341F);
+table td, table th {
+    border: 1px solid white;
+    padding: 10px;
+
+    text-align: center;
 }

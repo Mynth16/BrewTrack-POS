@@ -24,6 +24,20 @@ export async function getAccountByUsername(username) {
   }
 }
 
+export async function getIngredientList() {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM `ingredient`'
+    );
+    return rows || null;
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
+}
+
+
+
 
 export async function verifyPassword(plainPassword, hashedPassword) {
   return bcrypt.compare(plainPassword, hashedPassword);
