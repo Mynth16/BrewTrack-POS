@@ -21,19 +21,22 @@ section {
     width: 100%;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 20px;
 }
 
 .inventory-list {
     display: flex;
     flex-direction: column;
     width: 90%;
-    height: 90%;
+    min-height: 80vh;
+    max-height: calc(100vh - 65px);
     color: white;
     overflow-y: auto;
 
     border-radius: 8px;
     background: linear-gradient(to top, #000000, #43341F);
+    box-sizing: border-box;
 }
 
 .inventory-list form {
@@ -51,4 +54,42 @@ table td, table th {
     padding: 10px;
 
     text-align: center;
+}
+
+
+/*CARDS FOR THE PRODUCTS*/
+.products-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    width: 100%;
+    padding: 10px 0;
+
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.product-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    max-width: 200px;
+
+    background: linear-gradient(to top, #43341F, #A9834E);
+    border: 1px solid white;
+    border-radius: 12px;
+    padding: 20px;
+
+    text-align: center;
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.product-card-content {
+    padding-top: 20px;
 }
