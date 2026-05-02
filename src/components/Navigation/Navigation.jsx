@@ -14,7 +14,7 @@ function Navigation() {
             <button onClick = {() => navigate('/dashboard')}>
                 Dashboard
             </button>
-            <button>
+            <button onClick={() => navigate('/pos')}>
                 Point of Sale
             </button>
             <button onClick = {() => navigate('/inventory')}>
