@@ -100,18 +100,18 @@ if (filter === 'all') {
                             </table>
                         ) : (
                             // Card grid for products
-                            <div className="products-container">
+                            <div className="inv-products-container">
                             {displayedData.map((product) => (
-                                <div key={product.productID} className="product-card">
+                                <div key={product.productID} className="inv-product-card">
                                     {product.imageURL ? (
-                                        <img src={product.imageURL} alt={product.productName} className="product-image" />
+                                        <img src={product.imageURL} alt={product.productName} className="inv-product-image" />
                                     ) : (
                                         <img src = {placeHolderImage} alt = "This product uses a placeholder image, but the placeholder image seems to be missing." />
                                     )}
-                                    <div className="product-card-content">
+                                    <div className="inv-product-card-content">
                                         <h3>{product.productName}</h3>
-                                        <p className="product-category">{product.category}</p>
-                                        <div className="product-stock">
+                                        <p className="inv-product-category">{product.category}</p>
+                                        <div className="inv-product-stock">
                                         <strong>Stock Left:</strong> <span className="stock-value">X</span>
                                         </div>
                                     </div>

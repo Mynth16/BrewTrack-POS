@@ -58,7 +58,7 @@ table td, table th {
 
 
 /*CARDS FOR THE PRODUCTS*/
-.products-container {
+.inv-products-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
@@ -70,7 +70,7 @@ table td, table th {
     padding: 10px;
 }
 
-.product-card {
+.inv-product-card {
     display: flex;
     flex-direction: column;
     min-height: 200px;
@@ -84,12 +84,12 @@ table td, table th {
     text-align: center;
 }
 
-.product-image {
+.inv-product-image {
     width: 100%;
     height: auto;
     object-fit: cover;
 }
 
-.product-card-content {
+.inv-product-card-content {
     padding-top: 20px;
 }
