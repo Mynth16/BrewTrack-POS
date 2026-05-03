@@ -1,0 +1,65 @@
+.update-ingredient-container {
+    display: flex;
+    height: 100vh;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+}
+
+.back-button {
+    background: linear-gradient(to top, #43341F, #A9834E);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+}
+
+.back-button:hover {
+    background: linear-gradient(to top, #352917, #8E6F41);
+}
+
+.update-ingredient-container form {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(to top, #000000, #43341F);
+    width: 40%;
+    min-width: 400px;
+    
+
+    border: 1px solid black;
+    border-radius: 12px;
+    padding: 40px;
+}
+
+.update-ingredient-header {
+    display: flex;
+    flex-direction: row;
+
+    padding-bottom: 10px; 
+    justify-content: space-between;
+}
+
+.update-ingredient-container form section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.form-question {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+
+    justify-content: space-between;
+    padding-top: 10px;
+}
+
+.form-question input {
+    width: 30%;
+    box-sizing: border-box;
+
+    border-radius: 6px;
+    border: transparent;
+}
