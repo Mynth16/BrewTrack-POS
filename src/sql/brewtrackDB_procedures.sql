@@ -55,48 +55,67 @@ END$$
 -- ============================================================
 
 CREATE PROCEDURE sp_AddOrderItem(
-    IN p_orderID INT,
-    IN p_productID INT,
-    IN p_variantID INT,
-    IN p_quantity INT,
-    IN p_priceAtTime DECIMAL(10, 2),
+    IN p_orderID      INT,
+    IN p_productID    INT,
+    IN p_variantID    INT,
+    IN p_quantity     INT,
+    IN p_priceAtTime  DECIMAL(10, 2),
     OUT p_orderItemID INT
 )
-READS SQL DATA
+MODIFIES SQL DATA
 BEGIN
-    DECLARE v_productType VARCHAR(20);
-    DECLARE v_lineTotal DECIMAL(10, 2);
-    
-    -- Validate input
+    DECLARE v_productType   VARCHAR(20);
+    DECLARE v_lineTotal     DECIMAL(10, 2);
+    DECLARE v_ingredientID  INT;
+    DECLARE v_qtyRequired   DECIMAL(10, 2);
+    DECLARE v_done          INT DEFAULT 0;
+
+    DECLARE cur_ingredients CURSOR FOR
+        SELECT ingredientID, quantityRequired
+        FROM productIngredient
+        WHERE productID = p_productID;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_orderItemID = NULL;
+    END;
+
+    START TRANSACTION;
+
+    -- Validate inputs
     IF p_orderID IS NULL OR p_orderID <= 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid orderID';
     END IF;
-    
+
     IF p_productID IS NULL OR p_productID <= 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid productID';
     END IF;
-    
+
     IF p_quantity IS NULL OR p_quantity <= 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid quantity';
     END IF;
-    
+
     -- Get product type
-    SELECT productType INTO v_productType FROM product WHERE productID = p_productID;
-    
+    SELECT productType INTO v_productType
+    FROM product
+    WHERE productID = p_productID;
+
     IF v_productType IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Product not found';
     END IF;
-    
+
     -- Calculate line total
     SET v_lineTotal = p_priceAtTime * p_quantity;
-    
+
     -- Insert order item
     INSERT INTO orderItem (orderID, productID, productPriceAtTime, lineTotal, productQuantity)
     VALUES (p_orderID, p_productID, p_priceAtTime, v_lineTotal, p_quantity);
-    
+
     SET p_orderItemID = LAST_INSERT_ID();
-    
-    -- Insert into appropriate bridge table based on product type
+
+    -- Insert into appropriate bridge table
     IF v_productType = 'drink' THEN
         INSERT INTO orderItemDrink (orderItemID, drinkID)
         VALUES (p_orderItemID, p_variantID);
@@ -107,7 +126,24 @@ BEGIN
         INSERT INTO orderItemSimpleProduct (orderItemID, simpleProductID)
         VALUES (p_orderItemID, p_variantID);
     END IF;
+
+    -- Deduct ingredient stock
+    OPEN cur_ingredients;
+    SET v_done = 0;  -- reset before inner loop starts
+    ing_loop: LOOP
+        FETCH cur_ingredients INTO v_ingredientID, v_qtyRequired;
+        IF v_done = 1 THEN LEAVE ing_loop; END IF;
+
+        UPDATE ingredient
+        SET stockQuantity = stockQuantity - (v_qtyRequired * p_quantity)
+        WHERE ingredientID = v_ingredientID;
+
+    END LOOP ing_loop;
+    CLOSE cur_ingredients;
+
+    COMMIT;
 END$$
+
 
 -- ============================================================
 -- 3. sp_AddOrderItemAddOn

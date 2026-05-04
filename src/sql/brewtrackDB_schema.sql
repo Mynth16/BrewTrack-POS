@@ -166,3 +166,8 @@ CREATE INDEX idx_order_account     ON orders(accountID);
 CREATE INDEX idx_order_date        ON orders(dateAndTime);
 CREATE INDEX idx_orderitem_order   ON orderItem(orderID);
 CREATE INDEX idx_orderitem_product ON orderItem(productID);
+
+CREATE INDEX idx_audit_record      ON audit_trail(recordID);
+CREATE INDEX idx_audit_table       ON audit_trail(tableName);
+CREATE INDEX idx_audit_changed_at  ON audit_trail(changedAt);
+CREATE INDEX idx_pi_ingredient     ON productIngredient(ingredientID);

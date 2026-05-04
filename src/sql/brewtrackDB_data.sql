@@ -28,7 +28,28 @@ INSERT INTO ingredient (ingredientID, ingredientName, stockQuantity, minStockLev
 (7, 'Black Pearl',    0.00, 0.00, 'kg',  NULL),
 (8, 'Nata',           0.00, 0.00, 'kg',  NULL),
 (9, 'Popping Boba',   0.00, 0.00, 'kg',  NULL),
-(10,'Espresso',       0.00, 0.00, 'kg',  NULL);
+(10,'Espresso',       0.00, 0.00, 'kg',  NULL),
+-- Base ingredients for products
+(11, 'All-Purpose Flour',     50.00, 10.00, 'kg',  NULL),
+(12, 'Eggs',                  100.00, 20.00, 'dozen', NULL),
+(13, 'Butter',                20.00, 5.00, 'kg',  NULL),
+(14, 'Sugar',                 30.00, 5.00, 'kg',  NULL),
+(15, 'White Rice',            80.00, 20.00, 'kg',  NULL),
+(16, 'Pork Meat',             40.00, 10.00, 'kg',  NULL),
+(17, 'Chicken Meat',          35.00, 10.00, 'kg',  NULL),
+(18, 'Fish Fillet',           20.00, 5.00, 'kg',  NULL),
+(19, 'Beef',                  30.00, 5.00, 'kg',  NULL),
+(20, 'Fresh Milk',            50.00, 10.00, 'L',   NULL),
+(21, 'Tea Leaves',            10.00, 2.00, 'kg',  '2026-12-31'),
+(22, 'Coffee Beans',          15.00, 3.00, 'kg',  '2026-11-30'),
+(23, 'Vegetable Oil',         30.00, 10.00, 'L',   NULL),
+(24, 'Potatoes',              50.00, 10.00, 'kg',  NULL),
+(25, 'Bread/Buns',            40.00, 10.00, 'pcs', NULL),
+(26, 'Canned Tuna',           15.00, 5.00, 'cans', '2026-08-31'),
+(27, 'Yogurt Base',           20.00, 5.00, 'L',   '2026-06-30'),
+(28, 'Fruit Puree (mixed)',   10.00, 2.00, 'kg',  '2026-07-15'),
+(29, 'Carbonated Water',      40.00, 10.00, 'L',   NULL),
+(30, 'Salt',                  5.00, 1.00, 'kg',   NULL);
 
 -- ADD-ONS
 INSERT INTO addOn (addOnID, ingredientID, addOnName, addOnPrice) VALUES
@@ -372,6 +393,302 @@ INSERT INTO productAddOn (productID, addOnID, quantityRequired) VALUES
 (74, 6, 0.01), (74, 7, 0.01), (74, 8, 0.01), (74, 9, 0.01), (74, 10, 0.01),
 (75, 6, 0.01), (75, 7, 0.01), (75, 8, 0.01), (75, 9, 0.01), (75, 10, 0.01),
 (76, 6, 0.01), (76, 7, 0.01), (76, 8, 0.01), (76, 9, 0.01), (76, 10, 0.01);
+
+-- PRODUCT INGREDIENT MAPPINGS
+INSERT INTO productIngredient (productID, ingredientID, quantityRequired) VALUES
+-- SNACKS
+-- Siomai (1) - Flour, Meat, Oil, Eggs
+(1, 11, 0.15),  -- Flour
+(1, 17, 0.25),  -- Chicken Meat
+(1, 23, 0.05),  -- Oil
+(1, 12, 0.10),  -- Eggs
+-- Fries Solo (2) - Potatoes, Oil, Salt
+(2, 24, 0.30),  -- Potatoes
+(2, 23, 0.10),  -- Oil
+(2, 30, 0.02),  -- Salt
+-- Nachos (3) - Flour, Oil, Salt
+(3, 11, 0.20),  -- Flour
+(3, 23, 0.15),  -- Oil
+(3, 30, 0.03),  -- Salt
+-- Fries Overload (4) - Potatoes, Oil, Salt
+(4, 24, 0.50),  -- Potatoes
+(4, 23, 0.15),  -- Oil
+(4, 30, 0.03),  -- Salt
+-- Tuna Sandwich (5) - Bread, Tuna, Oil, Potatoes
+(5, 25, 2.00),  -- Bread/Buns (2 pcs)
+(5, 26, 0.15),  -- Canned Tuna
+(5, 23, 0.08),  -- Oil (for fries)
+(5, 24, 0.25),  -- Potatoes
+-- Althea's Burger (6) - Bread, Beef, Potatoes, Oil
+(6, 25, 1.00),  -- Bread/Buns
+(6, 19, 0.20),  -- Beef
+(6, 24, 0.25),  -- Potatoes
+(6, 23, 0.08),  -- Oil
+-- SHARING BUNDLES
+-- Barkada Bundle 1 (7)
+(7, 15, 1.50),  -- White Rice
+(7, 17, 1.00),  -- Chicken
+(7, 23, 0.20),  -- Oil
+-- Barkada Bundle 2 (8)
+(8, 15, 2.00),  -- White Rice
+(8, 16, 0.80),  -- Pork
+(8, 17, 0.80),  -- Chicken
+(8, 23, 0.25),  -- Oil
+-- Barkada Bundle 3 (9)
+(9, 15, 2.50),  -- White Rice
+(9, 16, 1.00),  -- Pork
+(9, 17, 1.00),  -- Chicken
+(9, 19, 0.50),  -- Beef
+(9, 23, 0.30),  -- Oil
+-- RICE MEALS
+-- Pork Tonkatsu (10)
+(10, 15, 0.80),  -- White Rice
+(10, 16, 0.30),  -- Pork Meat
+(10, 23, 0.10),  -- Oil
+(10, 11, 0.10),  -- Flour (breading)
+(10, 12, 0.05),  -- Eggs
+-- Cordon Bleu (11)
+(11, 15, 0.80),  -- White Rice
+(11, 17, 0.30),  -- Chicken Meat
+(11, 23, 0.10),  -- Oil
+(11, 11, 0.10),  -- Flour
+(11, 12, 0.05),  -- Eggs
+-- Fish Fillet (12)
+(12, 15, 0.80),  -- White Rice
+(12, 18, 0.30),  -- Fish Fillet
+(12, 23, 0.10),  -- Oil
+(12, 11, 0.10),  -- Flour
+(12, 12, 0.05),  -- Eggs
+-- Burger Steak (13)
+(13, 15, 0.80),  -- White Rice
+(13, 19, 0.35),  -- Beef
+(13, 23, 0.08),  -- Oil
+-- Hungarian (14)
+(14, 15, 0.80),  -- White Rice
+(14, 19, 0.30),  -- Beef
+(14, 23, 0.08),  -- Oil
+-- Siomai Rice Meal (15)
+(15, 15, 0.80),  -- White Rice
+(15, 17, 0.25),  -- Chicken
+(15, 23, 0.08),  -- Oil
+(15, 11, 0.10),  -- Flour
+(15, 12, 0.08),  -- Eggs
+-- Lumpia (16)
+(16, 15, 0.80),  -- White Rice
+(16, 16, 0.25),  -- Pork
+(16, 23, 0.10),  -- Oil (frying)
+(16, 11, 0.08),  -- Flour
+-- Ham (17)
+(17, 15, 0.80),  -- White Rice
+(17, 16, 0.30),  -- Pork
+(17, 23, 0.08),  -- Oil
+-- EXTRAS
+(18, 15, 0.80),  -- Rice
+(19, 12, 1.00),  -- Eggs
+(20, 23, 0.02),  -- Oil (for sauce base)
+-- WAFFLES
+-- Plain Waffle (21)
+(21, 11, 0.25),  -- Flour
+(21, 12, 0.15),  -- Eggs
+(21, 14, 0.10),  -- Sugar
+(21, 13, 0.08),  -- Butter
+(21, 20, 0.10),  -- Milk
+-- Choco Chip Waffle (22)
+(22, 11, 0.25),  -- Flour
+(22, 12, 0.15),  -- Eggs
+(22, 14, 0.12),  -- Sugar
+(22, 13, 0.08),  -- Butter
+(22, 20, 0.10),  -- Milk
+-- Graham Waffle (23)
+(23, 11, 0.25),  -- Flour
+(23, 12, 0.15),  -- Eggs
+(23, 14, 0.12),  -- Sugar
+(23, 13, 0.08),  -- Butter
+(23, 20, 0.10),  -- Milk
+-- Choco Mallows Waffle (24)
+(24, 11, 0.25),  -- Flour
+(24, 12, 0.15),  -- Eggs
+(24, 14, 0.15),  -- Sugar
+(24, 13, 0.08),  -- Butter
+(24, 20, 0.10),  -- Milk
+-- Mango Waffle (25)
+(25, 11, 0.25),  -- Flour
+(25, 12, 0.15),  -- Eggs
+(25, 14, 0.12),  -- Sugar
+(25, 13, 0.08),  -- Butter
+(25, 20, 0.10),  -- Milk
+-- Blueberry Waffle (26)
+(26, 11, 0.25),  -- Flour
+(26, 12, 0.15),  -- Eggs
+(26, 14, 0.12),  -- Sugar
+(26, 13, 0.08),  -- Butter
+(26, 20, 0.10),  -- Milk
+-- Strawberry Waffle (27)
+(27, 11, 0.25),  -- Flour
+(27, 12, 0.15),  -- Eggs
+(27, 14, 0.12),  -- Sugar
+(27, 13, 0.08),  -- Butter
+(27, 20, 0.10),  -- Milk
+-- Oreo Overload Waffle (28)
+(28, 11, 0.25),  -- Flour
+(28, 12, 0.15),  -- Eggs
+(28, 14, 0.15),  -- Sugar
+(28, 13, 0.08),  -- Butter
+(28, 20, 0.10),  -- Milk
+-- MILK TEA DRINKS (29-34)
+(29, 20, 0.20),  -- Milk (Wintermelon)
+(29, 21, 0.05),  -- Tea Leaves
+(29, 14, 0.04),  -- Sugar
+(30, 20, 0.20),  -- Milk (Okinawa)
+(30, 21, 0.05),  -- Tea Leaves
+(30, 14, 0.04),  -- Sugar
+(31, 20, 0.20),  -- Milk (Chocolate)
+(31, 21, 0.05),  -- Tea Leaves
+(31, 14, 0.06),  -- Sugar (higher for chocolate)
+(32, 20, 0.20),  -- Milk (Cookies & Cream)
+(32, 21, 0.05),  -- Tea Leaves
+(32, 14, 0.05),  -- Sugar
+(33, 20, 0.20),  -- Milk (Matcha)
+(33, 21, 0.05),  -- Tea Leaves
+(33, 14, 0.05),  -- Sugar
+(34, 20, 0.20),  -- Milk (Red Velvet)
+(34, 21, 0.05),  -- Tea Leaves
+(34, 14, 0.06),  -- Sugar
+-- FRUIT MILK (35-37)
+(35, 20, 0.18),  -- Milk (Mango)
+(35, 28, 0.08),  -- Fruit Puree
+(35, 14, 0.04),  -- Sugar
+(36, 20, 0.18),  -- Milk (Strawberry)
+(36, 28, 0.08),  -- Fruit Puree
+(36, 14, 0.04),  -- Sugar
+(37, 20, 0.18),  -- Milk (Blueberry)
+(37, 28, 0.08),  -- Fruit Puree
+(37, 14, 0.04),  -- Sugar
+-- YOGURTS (38-40)
+(38, 27, 0.25),  -- Yogurt Base (Blueberry)
+(38, 28, 0.05),  -- Fruit Puree
+(38, 14, 0.02),  -- Sugar
+(39, 27, 0.25),  -- Yogurt Base (Strawberry)
+(39, 28, 0.05),  -- Fruit Puree
+(39, 14, 0.02),  -- Sugar
+(40, 27, 0.25),  -- Yogurt Base (Green Apple)
+(40, 28, 0.05),  -- Fruit Puree
+(40, 14, 0.02),  -- Sugar
+-- FRUIT TEA (41-43)
+(41, 21, 0.05),  -- Tea Leaves (Sunset Vibes)
+(41, 28, 0.08),  -- Fruit Puree
+(41, 14, 0.04),  -- Sugar
+(42, 21, 0.05),  -- Tea Leaves (House Blend)
+(42, 28, 0.08),  -- Fruit Puree
+(42, 14, 0.04),  -- Sugar
+(43, 21, 0.06),  -- Tea Leaves (Signature Mix Berries)
+(43, 28, 0.10),  -- Fruit Puree
+(43, 14, 0.04),  -- Sugar
+-- SODA POPS (44-46)
+(44, 29, 0.20),  -- Carbonated Water (Green Apple)
+(44, 28, 0.06),  -- Fruit Puree
+(44, 14, 0.04),  -- Sugar
+(45, 29, 0.20),  -- Carbonated Water (Blueberry)
+(45, 28, 0.06),  -- Fruit Puree
+(45, 14, 0.04),  -- Sugar
+(46, 29, 0.20),  -- Carbonated Water (Strawberry)
+(46, 28, 0.06),  -- Fruit Puree
+(46, 14, 0.04),  -- Sugar
+-- MATCHA SERIES (47-50)
+(47, 20, 0.18),  -- Milk (Matcha Latte)
+(47, 21, 0.06),  -- Tea Leaves (Matcha)
+(47, 14, 0.05),  -- Sugar
+(48, 20, 0.18),  -- Milk (Cloud Matcha)
+(48, 21, 0.06),  -- Tea Leaves (Matcha)
+(48, 14, 0.06),  -- Sugar
+(49, 20, 0.18),  -- Milk (Strawberry Matcha)
+(49, 21, 0.06),  -- Tea Leaves (Matcha)
+(49, 14, 0.06),  -- Sugar
+(50, 20, 0.15),  -- Milk (Matcha Espresso)
+(50, 22, 0.03),  -- Coffee Beans (for espresso)
+(50, 21, 0.05),  -- Tea Leaves (Matcha)
+(50, 14, 0.05),  -- Sugar
+-- JUICE (51)
+(51, 28, 0.15),  -- Fruit Puree (Cucumber Lemonade)
+(51, 29, 0.15),  -- Carbonated Water
+(51, 14, 0.05),  -- Sugar
+-- SIGNATURE DRINK (52)
+(52, 20, 0.20),  -- Milk (Althea's Milky Chocolate)
+(52, 22, 0.03),  -- Coffee Beans
+(52, 14, 0.08),  -- Sugar
+-- TEA (53-55)
+(53, 21, 0.04),  -- Tea Leaves (Jasmine)
+(53, 20, 0.10),  -- Milk
+(53, 14, 0.02),  -- Sugar
+(54, 21, 0.04),  -- Tea Leaves (English Breakfast)
+(54, 20, 0.10),  -- Milk
+(54, 14, 0.02),  -- Sugar
+(55, 21, 0.04),  -- Tea Leaves (Natural)
+(55, 20, 0.10),  -- Milk
+(55, 14, 0.02),  -- Sugar
+-- COFFEE (56-64)
+(56, 22, 0.04),  -- Coffee Beans (Vanilla Americano)
+(56, 14, 0.03),  -- Sugar
+(57, 22, 0.04),  -- Coffee Beans (Cafe Latte)
+(57, 20, 0.15),  -- Milk
+(57, 14, 0.03),  -- Sugar
+(58, 22, 0.04),  -- Coffee Beans (Cappuccino)
+(58, 20, 0.12),  -- Milk
+(58, 14, 0.03),  -- Sugar
+(59, 22, 0.04),  -- Coffee Beans (French Vanilla)
+(59, 20, 0.15),  -- Milk
+(59, 14, 0.04),  -- Sugar
+(60, 22, 0.04),  -- Coffee Beans (Mocha Latte)
+(60, 20, 0.15),  -- Milk
+(60, 14, 0.05),  -- Sugar
+(61, 22, 0.04),  -- Coffee Beans (White Choco Mocha)
+(61, 20, 0.15),  -- Milk
+(61, 14, 0.06),  -- Sugar
+(62, 22, 0.04),  -- Coffee Beans (Caramel Macchiato)
+(62, 20, 0.12),  -- Milk
+(62, 14, 0.05),  -- Sugar
+(63, 22, 0.04),  -- Coffee Beans (Salted Caramel)
+(63, 14, 0.05),  -- Sugar
+(64, 22, 0.04),  -- Coffee Beans (Spanish Latte)
+(64, 20, 0.15),  -- Milk
+(64, 14, 0.04),  -- Sugar
+-- COFFEE BASED FRAPPE (65-68)
+(65, 22, 0.05),  -- Coffee Beans (Java Chips)
+(65, 20, 0.18),  -- Milk
+(65, 14, 0.06),  -- Sugar
+(66, 22, 0.05),  -- Coffee Beans (Salted Caramel Frappe)
+(66, 20, 0.18),  -- Milk
+(66, 14, 0.07),  -- Sugar
+(67, 22, 0.05),  -- Coffee Beans (Double Dutch)
+(67, 20, 0.18),  -- Milk
+(67, 14, 0.07),  -- Sugar
+(68, 22, 0.05),  -- Coffee Beans (Caramel Macchiato Frappe)
+(68, 20, 0.18),  -- Milk
+(68, 14, 0.06),  -- Sugar
+-- CREAM BASED FRAPPE (69-76)
+(69, 20, 0.20),  -- Milk (Cookies & Cream Frappe)
+(69, 14, 0.06),  -- Sugar
+(70, 20, 0.20),  -- Milk (Red Velvet Frappe)
+(70, 14, 0.06),  -- Sugar
+(71, 20, 0.20),  -- Milk (Matcha Oreo Frappe)
+(71, 21, 0.04),  -- Tea Leaves (Matcha)
+(71, 14, 0.06),  -- Sugar
+(72, 20, 0.20),  -- Milk (Strawberry Oreo Frappe)
+(72, 28, 0.06),  -- Fruit Puree
+(72, 14, 0.05),  -- Sugar
+(73, 20, 0.20),  -- Milk (Matcha Strawberry Frappe)
+(73, 21, 0.04),  -- Tea Leaves (Matcha)
+(73, 28, 0.06),  -- Fruit Puree
+(73, 14, 0.05),  -- Sugar
+(74, 20, 0.20),  -- Milk (Mango Graham Frappe)
+(74, 28, 0.08),  -- Fruit Puree
+(74, 14, 0.05),  -- Sugar
+(75, 20, 0.20),  -- Milk (Blueberry Cheesecake Frappe)
+(75, 28, 0.08),  -- Fruit Puree
+(75, 14, 0.05),  -- Sugar
+(76, 20, 0.20),  -- Milk (Strawberry Cheesecake Frappe)
+(76, 28, 0.08),  -- Fruit Puree
+(76, 14, 0.05);  -- Sugar
 
 -- ORDERS (12 realistic orders across 3 days)
 INSERT INTO orders (orderID, accountID, dateAndTime, discountPercent, taxAmount, paymentMethod) VALUES
