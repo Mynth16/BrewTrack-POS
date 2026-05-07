@@ -17,7 +17,7 @@ export default function CartItemRow({ item, onRemove, onUpdateQty, onToggleAddOn
           </div>
         </div>
         <div className="cart-item-quantity">
-          <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>−</button>
+          <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>-</button>
           <span className="qty-value">{item.quantity}</span>
           <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity + 1)}>+</button>
         </div>
