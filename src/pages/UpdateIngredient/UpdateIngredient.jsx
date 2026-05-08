@@ -8,6 +8,7 @@ function UpdateProductIngredient() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { ingredientID } = useParams();
+    const [errorMessage, setErrorMessage] = useState('');
     const [formState, setFormState] = useState({
         ingredientName: '',
         stockQuantity: '',
@@ -52,12 +53,43 @@ function UpdateProductIngredient() {
         }))
     };
 
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setErrorMessage('');
+
+        try {
+            const response = await fetch(`/api/ingredients/${ingredientID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ingredientName: formState.ingredientName.trim(),
+                    stockQuantity: Number(formState.stockQuantity),
+                    minStockLevel: formState.minStockLevel === '' ? null : Number(formState.minStockLevel),
+                    unit: formState.unit.trim(),
+                    expiryDate: formState.expiryDate || null,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update this ingredient.'); 
+            }
+
+            navigate('/inventory');
+    } catch (error) {
+        console.error(error);
+        setErrorMessage(error.message || 'Failed to update this ingredient.');
+    }
+};
+
     return (
         <div className = "update-ingredient-container">
             <form>
                 <div className = "update-ingredient-header">
                     <h1>Update Ingredient</h1>
-                    <button className = "back-button" onClick = {() => navigate(-1)}>
+                    <button type = "button" className = "back-button" onClick = {() => navigate('/inventory')}>
                         Back
                     </button>
                 </div>
@@ -102,6 +134,11 @@ function UpdateProductIngredient() {
                         placeholder = "Enter New Expiration Date"
                         value = {formState.expiryDate}
                         onChange = {handleChange('expiryDate')}/>
+                    </div>
+                    <div className = "submit-button-container">
+                        <button type = "submit" onClick = {handleSubmit} className = "submit-button">
+                            Update Ingredient
+                        </button>
                     </div>
                 </section>
             </form>

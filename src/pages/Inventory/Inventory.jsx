@@ -97,6 +97,7 @@ if (filter === 'all') {
                                     <tr>
                                     <th>Name</th>
                                     <th>Stock</th>
+                                    {isManager && <th>Min Stock Level (For Alerts)</th>}
                                     <th>Unit</th>
                                     <th>Expiry</th>
                                     {isManager && <th>Action</th>}
@@ -107,11 +108,12 @@ if (filter === 'all') {
                                     <tr key={item.ingredientID}>
                                         <td>{item.ingredientName}</td>
                                         <td>{item.stockQuantity}</td>
+                                        {isManager && <td>{item.minStockLevel}</td>}
                                         <td>{item.unit}</td>
                                         <td>{item.expiryDate ? item.expiryDate.slice(0, 10) : '-'}</td>
                                         {isManager && (
                                             <td>
-                                                <button onClick = {() => navigate(`/inventory/update-ingredient/${item.ingredientID}`)}>
+                                                <button className = "inv-update-button" onClick = {() => navigate(`/inventory/update-ingredient/${item.ingredientID}`)}>
                                                     Update
                                                 </button>
                                             </td>

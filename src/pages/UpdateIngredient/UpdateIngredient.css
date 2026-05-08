@@ -63,3 +63,18 @@
     border-radius: 6px;
     border: transparent;
 }
+
+.submit-button-container {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding-top: 15px;
+}
+
+.submit-button {
+    background: linear-gradient(to top, #43341F, #A9834E);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    padding: 8px;
+}

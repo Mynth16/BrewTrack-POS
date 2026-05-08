@@ -11,7 +11,7 @@ function UpdateProduct() {
     return (
         <div className = "update-product-container">
             <h1>Update Product</h1>
-            <button onClick = {() => navigate(-1)}>Back</button>
+            <button type = "button" onClick = {() => navigate('/inventory')}>Back</button>
 
             <form>
                 <label>Enter New Product Name: </label> <br />

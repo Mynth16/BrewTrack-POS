@@ -112,3 +112,12 @@ table td, table th {
 .inv-product-card-content {
     padding-top: 20px;
 }
+
+.inv-update-button {
+    border: 1px solid white;
+    border-radius: 4px;
+    padding: 4px;
+
+    color: white;   
+    background: linear-gradient(to top, #43341F, #A9834E);
+}
