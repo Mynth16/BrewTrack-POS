@@ -36,9 +36,6 @@ export async function getIngredientList() {
   }
 }
 
-
-
-
 export async function verifyPassword(plainPassword, hashedPassword) {
     return bcrypt.compare(plainPassword, hashedPassword);
 }
@@ -134,6 +131,53 @@ export async function finalizeOrder(orderId, paymentMethod, taxAmount) {
         return result.affectedRows > 0;
     } catch (error) {
         console.error('Error finalizing order:', error);
+        throw error;
+    }
+}
+
+export async function updateIngredient(
+    ingredientID, 
+    ingredientName,
+    stockQuantity,
+    unit,
+    minStockLevel,
+    expiryDate
+) {
+    try {
+        const [result] = await pool.query(
+            `UPDATE ingredient
+            SET ingredientName = ?,
+                stockQuantity = ?,
+                unit = ?,
+                minStockLevel = ?,
+                expiryDate = ?
+            WHERE ingredientID = ?`,
+            [   ingredientName,
+                stockQuantity,
+                unit,
+                minStockLevel,
+                expiryDate || null,
+                ingredientID,
+            ]
+        );
+
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Error while updating database: ', error);
+        throw error;
+    }
+}
+
+export async function addIngredient(ingredientName, stockQuantity, unit, minStockLevel, expiryDate) {
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO ingredient (ingredientName, stockQuantity, unit, minStockLevel, expiryDate)
+            VALUES (?, ?, ?, ?, ?)`,
+            [ingredientName, stockQuantity, unit, minStockLevel, expiryDate]
+        );
+        return result.insertID;
+    } catch (error) {
+        console.log('Failed to insert ingredient: ', error);
         throw error;
     }
 }
