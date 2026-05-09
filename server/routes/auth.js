@@ -13,8 +13,14 @@ export async function login(req, res) {
             return res.status(400).json({ error: 'Username and password required' });
         }
 
-        // Get account from database
-        const account = await getAccountByUsername(username);
+        // Get account from database (with retry logic built in)
+        let account;
+        try {
+            account = await getAccountByUsername(username);
+        } catch (dbError) {
+            console.error('Database error during login:', dbError);
+            return res.status(503).json({ error: 'Service temporarily unavailable' });
+        }
 
         if (!account || account.status !== 'Active') {
             return res.status(401).json({ error: 'Invalid username or password' });

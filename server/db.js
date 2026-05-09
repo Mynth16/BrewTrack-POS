@@ -12,15 +12,25 @@ const pool = mysql.createPool({
 });
 
 export async function getAccountByUsername(username) {
-    try {
-        const [rows] = await pool.query(
-            'SELECT accountID, username, password, role, status FROM account WHERE username = ?',
-            [username]
-        );
-        return rows[0] || null;
-    } catch (error) {
-        console.error('Database query error:', error);
-        throw error;
+    const maxRetries = 3;
+    const retryDelay = 100; // ms
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const [rows] = await pool.query(
+                'SELECT accountID, username, password, role, status FROM account WHERE username = ?',
+                [username]
+            );
+            return rows[0] || null;
+        } catch (error) {
+            if (attempt < maxRetries - 1 && (error.code === 'PROTOCOL_CONNECTION_LOST' || error.code === 'ECONNRESET')) {
+                console.warn(`Database connection error, retrying (${attempt + 1}/${maxRetries}):`, error.message);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            } else {
+                console.error('Database query error:', error);
+                throw error;
+            }
+        }
     }
 }
 
