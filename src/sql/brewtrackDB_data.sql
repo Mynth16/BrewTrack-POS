@@ -826,3 +826,96 @@ INSERT INTO orderItemAddOn (orderItemAddOnID, orderItemID, addOnID, addOnPriceAt
 (16, 32, 7,  10.00, 3),
 -- Order 12: Signature Mix Berries 16oz x2 + Popping Boba x2
 (17, 33, 9,  15.00, 2);
+
+
+-- Populate imageURL for existing products
+-- Run this after brewtrackDB_schema.sql and brewtrackDB_data.sql
+USE brewtrackdb;
+
+-- COFFEE (9 products)
+UPDATE product SET imageURL = '/products/Coffee/cafeLatte.jpg' WHERE productName = 'Cafe Latte';
+UPDATE product SET imageURL = '/products/Coffee/cappucino.jpg' WHERE productName = 'Cappuccino';
+UPDATE product SET imageURL = '/products/Coffee/caramelMacchiato.jpg' WHERE productName = 'Caramel Macchiato';
+UPDATE product SET imageURL = '/products/Coffee/frenchVanilla.jpg' WHERE productName = 'French Vanilla';
+UPDATE product SET imageURL = '/products/Coffee/mochaLatte.jpg' WHERE productName = 'Mocha Latte';
+UPDATE product SET imageURL = '/products/Coffee/saltedCaramelCoffee.jpg' WHERE productName = 'Salted Caramel Coffee';
+UPDATE product SET imageURL = '/products/Coffee/spanishLatte.jpg' WHERE productName = 'Spanish Latte';
+UPDATE product SET imageURL = '/products/Coffee/vanillaAmericano.jpg' WHERE productName = 'Vanilla Americano';
+UPDATE product SET imageURL = '/products/Coffee/whiteChocoMocha.jpg' WHERE productName = 'White Choco Mocha';
+
+-- TEA (3 products)
+UPDATE product SET imageURL = '/products/Tea/englishBreakfastTea.jpg' WHERE productName = 'English Breakfast';
+UPDATE product SET imageURL = '/products/Tea/jasmineTea.jpg' WHERE productName = 'Jasmine Tea';
+UPDATE product SET imageURL = '/products/Tea/naturalTea.jpg' WHERE productName = 'Natural Tea';
+
+-- COFFEE BASED FRAPPE (4 products)
+UPDATE product SET imageURL = '/products/Coffee Based Frappe/caramelMacchiatoFrappe.jpg' WHERE productName = 'Caramel Macchiato Frappe';
+UPDATE product SET imageURL = '/products/Coffee Based Frappe/doubleDutchFrappe.jpg' WHERE productName = 'Double Dutch';
+UPDATE product SET imageURL = '/products/Coffee Based Frappe/javaChipsFrappe.jpg' WHERE productName = 'Java Chips';
+UPDATE product SET imageURL = '/products/Coffee Based Frappe/saltedCaramelFrappe.jpg' WHERE productName = 'Salted Caramel Frappe';
+
+-- CREAM BASED FRAPPE (8 products)
+UPDATE product SET imageURL = '/products/Cream Based Frappe/blueberryCheesecakeFrappe.jpg' WHERE productName = 'Blueberry Cheesecake Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/cookiesAndCreamFrappe.jpg' WHERE productName = 'Cookies & Cream Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/mangoGrahamFrappe.jpg' WHERE productName = 'Mango Graham Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/matchaOreoFrappe.jpg' WHERE productName = 'Matcha Oreo Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/matchaStrawberryFrappe.jpg' WHERE productName = 'Matcha Strawberry Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/redVelvetFrappe.jpg' WHERE productName = 'Red Velvet Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/strawberryCheesecakeFrappe.jpg' WHERE productName = 'Strawberry Cheesecake Frappe';
+UPDATE product SET imageURL = '/products/Cream Based Frappe/strawberryOreoFrappe.jpg' WHERE productName = 'Strawberry Oreo Frappe';
+
+-- MATCHA SERIES (4 products)
+UPDATE product SET imageURL = '/products/Matcha Series/cloudMatcha.jpg' WHERE productName = 'Cloud Matcha';
+UPDATE product SET imageURL = '/products/Matcha Series/matchaEspresso.jpg' WHERE productName = 'Matcha Espresso';
+UPDATE product SET imageURL = '/products/Matcha Series/matchaLatte.jpg' WHERE productName = 'Matcha Latte';
+UPDATE product SET imageURL = '/products/Matcha Series/strawberryMatcha.jpg' WHERE productName = 'Strawberry Matcha';
+
+-- MILK TEA (6 products)
+UPDATE product SET imageURL = '/products/Milk Tea/chocolateMilkTea.jpg' WHERE productName = 'Chocolate Milk Tea';
+UPDATE product SET imageURL = '/products/Milk Tea/cookiesAndCreamMilkTea.jpg' WHERE productName = 'Cookies & Cream Milk Tea';
+UPDATE product SET imageURL = '/products/Milk Tea/matchaMilkTea.jpg' WHERE productName = 'Matcha Milk Tea';
+UPDATE product SET imageURL = '/products/Milk Tea/okinawaMilkTea.jpg' WHERE productName = 'Okinawa';
+UPDATE product SET imageURL = '/products/Milk Tea/redVelvetMilkTea.jpg' WHERE productName = 'Red Velvet Milk Tea';
+UPDATE product SET imageURL = '/products/Milk Tea/wintermelonMilkTea.jpg' WHERE productName = 'Wintermelon';
+
+-- FRUIT MILK (3 products)
+UPDATE product SET imageURL = '/products/Fruit Milk/blueberryFruitMilk.jpg' WHERE productName = 'Blueberry Fruit Milk';
+UPDATE product SET imageURL = '/products/Fruit Milk/mangoFruitMilk.jpg' WHERE productName = 'Mango Fruit Milk';
+UPDATE product SET imageURL = '/products/Fruit Milk/strawberryFruitMilk.jpg' WHERE productName = 'Strawberry Fruit Milk';
+
+-- YOGURT (3 products)
+UPDATE product SET imageURL = '/products/Yogurt/blueberryYogurt.jpg' WHERE productName = 'Blueberry Yogurt';
+UPDATE product SET imageURL = '/products/Yogurt/greenAppleYogurt.jpg' WHERE productName = 'Green Apple Yogurt';
+UPDATE product SET imageURL = '/products/Yogurt/strawberryYogurt.jpg' WHERE productName = 'Strawberry Yogurt';
+
+-- JUICE (1 product)
+UPDATE product SET imageURL = '/products/Juice/cucumberLemonade.jpg' WHERE productName = 'Cucumber Lemonade';
+
+-- SODA POPS (3 products)
+UPDATE product SET imageURL = '/products/Soda Pops/blueberrySodaPop.jpg' WHERE productName = 'Blueberry Soda';
+UPDATE product SET imageURL = '/products/Soda Pops/greenAppleSodaPop.jpg' WHERE productName = 'Green Apple Soda';
+UPDATE product SET imageURL = '/products/Soda Pops/strawberrySodaPop.jpg' WHERE productName = 'Strawberry Soda';
+
+-- RICE MEALS (7 products)
+UPDATE product SET imageURL = '/products/Rice Meals/burgerSteak.jpg' WHERE productName = 'Burger Steak';
+UPDATE product SET imageURL = '/products/Rice Meals/cordonBleu.jpg' WHERE productName = 'Cordon Bleu';
+UPDATE product SET imageURL = '/products/Rice Meals/fishFillet.jpg' WHERE productName = 'Fish Fillet';
+UPDATE product SET imageURL = '/products/Rice Meals/ham.jpg' WHERE productName = 'Ham';
+UPDATE product SET imageURL = '/products/Rice Meals/lumpia.jpg' WHERE productName = 'Lumpia';
+UPDATE product SET imageURL = '/products/Rice Meals/porkTonkatsu.jpg' WHERE productName = 'Pork Tonkatsu';
+UPDATE product SET imageURL = '/products/Rice Meals/siomaiRiceMeal.jpg' WHERE productName = 'Siomai Rice Meal';
+
+-- WAFFLES (8 products)
+UPDATE product SET imageURL = '/products/Waffles/blueberryWaffle.jpg' WHERE productName = 'Blueberry Waffle';
+UPDATE product SET imageURL = '/products/Waffles/chocoChipWaffle.jpg' WHERE productName = 'Choco Chip Waffle';
+UPDATE product SET imageURL = '/products/Waffles/chocoMallowsWaffle.jpg' WHERE productName = 'Choco Mallows Waffle';
+UPDATE product SET imageURL = '/products/Waffles/grahamWaffle.jpg' WHERE productName = 'Graham Waffle';
+UPDATE product SET imageURL = '/products/Waffles/mangoWaffle.jpg' WHERE productName = 'Mango Waffle';
+UPDATE product SET imageURL = '/products/Waffles/oreoOverloadWaffle.jpg' WHERE productName = 'Oreo Overload Waffle';
+UPDATE product SET imageURL = '/products/Waffles/plainWaffle.jpg' WHERE productName = 'Plain Waffle';
+UPDATE product SET imageURL = '/products/Waffles/strawberryWaffle.jpg' WHERE productName = 'Strawberry Waffle';
+
+-- EXTRAS (3 products)
+UPDATE product SET imageURL = '/products/Extras/dipSauce.jpg' WHERE productName = 'Dip Sauce';
+UPDATE product SET imageURL = '/products/Extras/egg.jpg' WHERE productName = 'Egg';
+UPDATE product SET imageURL = '/products/Extras/rice.jpg' WHERE productName = 'Rice';

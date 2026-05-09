@@ -17,7 +17,7 @@ export default function ProductCard({ product, onAddToCart }) {
   return (
     <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
       <div className="product-image">
-        <img src="/src/products/default.png" alt={product.name} />
+        <img src={product.image || '/products/default.png'} alt={product.name} onError={(e) => { e.target.src = '/products/default.png'; }} />
       </div>
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>

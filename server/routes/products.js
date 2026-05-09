@@ -1,7 +1,13 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getProductMenu, getProductVariants, getAvailableAddOns } from '../db.js';
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PRODUCTS_IMAGE_DIR = path.join(__dirname, '../..', 'src/products');
 
 /**
  * Transform database product to API format
@@ -139,6 +145,88 @@ router.get('/:productId/addons', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to fetch add-ons',
+            message: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/products/images/categories
+ * Returns list of all available image categories
+ */
+router.get('/images/categories', (req, res) => {
+    try {
+        const categories = fs.readdirSync(PRODUCTS_IMAGE_DIR)
+            .filter(item => {
+                const itemPath = path.join(PRODUCTS_IMAGE_DIR, item);
+                return fs.statSync(itemPath).isDirectory();
+            })
+            .sort();
+
+        res.json({
+            success: true,
+            data: categories,
+        });
+    } catch (error) {
+        console.error('Error fetching image categories:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch image categories',
+            message: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/products/images/:category
+ * Returns list of available images in a specific category folder
+ */
+router.get('/images/:category', (req, res) => {
+    try {
+        const { category } = req.params;
+        const categoryPath = path.join(PRODUCTS_IMAGE_DIR, decodeURIComponent(category));
+
+        // Security check: ensure the path is within PRODUCTS_IMAGE_DIR
+        if (!categoryPath.startsWith(PRODUCTS_IMAGE_DIR)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid category',
+            });
+        }
+
+        // Check if directory exists
+        if (!fs.existsSync(categoryPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Category not found',
+            });
+        }
+
+        // Get all image files (jpg, png, webp, etc.)
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+        const images = fs.readdirSync(categoryPath)
+            .filter(file => {
+                const ext = path.extname(file).toLowerCase();
+                return imageExtensions.includes(ext);
+            })
+            .sort();
+
+        const imageUrls = images.map(image => ({
+            name: image,
+            filename: path.basename(image, path.extname(image)),
+            url: `/products/${encodeURIComponent(category)}/${encodeURIComponent(image)}`,
+        }));
+
+        res.json({
+            success: true,
+            category,
+            data: imageUrls,
+        });
+    } catch (error) {
+        console.error('Error fetching images:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch images',
             message: error.message,
         });
     }
