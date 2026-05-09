@@ -9,7 +9,7 @@ USE brewtrackdb;
 -- ============================================================
 -- Creates a complete order with items, variants, and add-ons
 -- Returns: orderID on success, NULL on error
--- Usage: CALL sp_CreateOrder(accountID, discountPercent, taxAmount, paymentMethod, @orderID);
+-- Usage: CALL sp_CreateOrder(accountID, discountPercent, paymentMethod, @orderID);
 -- ============================================================
 
 DELIMITER $$
@@ -17,7 +17,6 @@ DELIMITER $$
 CREATE PROCEDURE sp_CreateOrder(
     IN p_accountID INT,
     IN p_discountPercent DECIMAL(5, 2),
-    IN p_taxAmount DECIMAL(10, 2),
     IN p_paymentMethod VARCHAR(20),
     OUT p_orderID INT
 )
@@ -32,12 +31,11 @@ BEGIN
     END IF;
     
     IF p_discountPercent IS NULL THEN SET p_discountPercent = 0; END IF;
-    IF p_taxAmount IS NULL THEN SET p_taxAmount = 0; END IF;
     IF p_paymentMethod IS NULL THEN SET p_paymentMethod = 'Cash'; END IF;
     
     -- Create order
-    INSERT INTO orders (accountID, dateAndTime, discountPercent, taxAmount, paymentMethod)
-    VALUES (p_accountID, NOW(), p_discountPercent, p_taxAmount, p_paymentMethod);
+    INSERT INTO orders (accountID, dateAndTime, discountPercent, paymentMethod)
+    VALUES (p_accountID, NOW(), p_discountPercent, p_paymentMethod);
     
     SET p_orderID = LAST_INSERT_ID();
     
@@ -296,8 +294,8 @@ END$$
 -- ============================================================
 -- 7. sp_CalculateOrderTotal
 -- ============================================================
--- Calculate final order total with discount and tax
--- Returns: subtotal, discount amount, tax, final total
+-- Calculate final order total with discount
+-- Returns: subtotal, discount amount, final total
 -- Usage: CALL sp_CalculateOrderTotal(orderID);
 -- ============================================================
 
@@ -309,15 +307,13 @@ BEGIN
     DECLARE v_subtotal DECIMAL(10, 2);
     DECLARE v_discountPercent DECIMAL(5, 2);
     DECLARE v_discountAmount DECIMAL(10, 2);
-    DECLARE v_taxAmount DECIMAL(10, 2);
     DECLARE v_finalTotal DECIMAL(10, 2);
     
     -- Get order details
     SELECT
         COALESCE(SUM(oi.lineTotal), 0),
-        COALESCE(o.discountPercent, 0),
-        COALESCE(o.taxAmount, 0)
-    INTO v_subtotal, v_discountPercent, v_taxAmount
+        COALESCE(o.discountPercent, 0)
+    INTO v_subtotal, v_discountPercent
     FROM orders o
     LEFT JOIN orderItem oi ON o.orderID = oi.orderID
     WHERE o.orderID = p_orderID
@@ -325,14 +321,13 @@ BEGIN
     
     -- Calculate discount and final total
     SET v_discountAmount = ROUND(v_subtotal * (v_discountPercent / 100), 2);
-    SET v_finalTotal = v_subtotal - v_discountAmount + v_taxAmount;
+    SET v_finalTotal = v_subtotal - v_discountAmount;
     
     -- Return results
     SELECT
         v_subtotal AS subtotal,
         v_discountPercent AS discountPercent,
         v_discountAmount AS discountAmount,
-        v_taxAmount AS taxAmount,
         v_finalTotal AS finalTotal;
 END$$
 
@@ -383,7 +378,6 @@ BEGIN
         CONCAT(e.firstName, ' ', e.lastName) AS cashierName,
         o.paymentMethod,
         o.discountPercent,
-        o.taxAmount,
         p.productName,
         p.productType,
         CASE

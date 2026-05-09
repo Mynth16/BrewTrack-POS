@@ -5,17 +5,15 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [discountPercent, setDiscountPercent] = useState(0);
-    const [taxPercent, setTaxPercent] = useState(12); // Default 12% tax
 
     // Load cart from localStorage on mount
     useEffect(() => {
         const savedCart = localStorage.getItem('brewtrack_cart');
         if (savedCart) {
             try {
-                const { items, discount, tax } = JSON.parse(savedCart);
+                const { items, discount } = JSON.parse(savedCart);
                 setCartItems(items || []);
                 setDiscountPercent(discount || 0);
-                setTaxPercent(tax || 12);
             } catch (error) {
                 console.error('Error loading cart from localStorage:', error);
             }
@@ -27,10 +25,9 @@ export const CartProvider = ({ children }) => {
         const cartData = {
             items: cartItems,
             discount: discountPercent,
-            tax: taxPercent,
         };
         localStorage.setItem('brewtrack_cart', JSON.stringify(cartData));
-    }, [cartItems, discountPercent, taxPercent]);
+    }, [cartItems, discountPercent]);
 
     // Generate unique ID for cart items (product + size + selected add-ons)
     const generateItemId = (productId, size, addOns = []) => {
@@ -152,11 +149,9 @@ export const CartProvider = ({ children }) => {
             await orderService.addOrderItems(orderId, items, addOns, token);
 
             // Step 4: Complete order
-            const { totals: calculatedTotals } = calculateTotals();
             const completeData = await orderService.completeOrder(
                 orderId,
                 paymentMethod,
-                calculatedTotals.taxAmount,
                 token
             );
 
@@ -180,14 +175,12 @@ export const CartProvider = ({ children }) => {
 
         const discountAmount = (subtotal * discountPercent) / 100;
         const subtotalAfterDiscount = subtotal - discountAmount;
-        const taxAmount = (subtotalAfterDiscount * taxPercent) / 100;
-        const total = subtotalAfterDiscount + taxAmount;
+        const total = subtotalAfterDiscount;
 
         return {
             subtotal: parseFloat(subtotal.toFixed(2)),
             discountAmount: parseFloat(discountAmount.toFixed(2)),
             subtotalAfterDiscount: parseFloat(subtotalAfterDiscount.toFixed(2)),
-            taxAmount: parseFloat(taxAmount.toFixed(2)),
             total: parseFloat(total.toFixed(2)),
         };
     };
@@ -204,8 +197,6 @@ export const CartProvider = ({ children }) => {
         submitOrder,
         discountPercent,
         setDiscountPercent,
-        taxPercent,
-        setTaxPercent,
         totals,
         itemCount: cartItems.length,
     };

@@ -124,10 +124,10 @@ export async function getOrderHistory(orderId) {
     }
 }
 
-export async function finalizeOrder(orderId, paymentMethod, taxAmount) {
+export async function finalizeOrder(orderId, paymentMethod) {
     try {
-        const query = `UPDATE orders SET paymentMethod = ?, taxAmount = ?, status = 'completed' WHERE orderID = ?`;
-        const [result] = await pool.query(query, [paymentMethod, taxAmount, orderId]);
+        const query = `UPDATE orders SET paymentMethod = ?, status = 'completed' WHERE orderID = ?`;
+        const [result] = await pool.query(query, [paymentMethod, orderId]);
         return result.affectedRows > 0;
     } catch (error) {
         console.error('Error finalizing order:', error);

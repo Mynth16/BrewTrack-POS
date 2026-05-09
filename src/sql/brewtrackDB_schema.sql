@@ -103,7 +103,6 @@ CREATE TABLE orders (
     accountID       INT             NOT NULL,
     dateAndTime     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     discountPercent DECIMAL(5, 2)   DEFAULT 0,
-    taxAmount       DECIMAL(10, 2)  DEFAULT 0,
     paymentMethod   VARCHAR(20),
     FOREIGN KEY (accountID) REFERENCES account(accountID)
 );

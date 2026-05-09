@@ -242,11 +242,6 @@ export default function Pos() {
                   </div>
                 )}
 
-                <div className="summary-row">
-                  <span>Tax (12%):</span>
-                  <span>₱{totals.taxAmount.toFixed(2)}</span>
-                </div>
-
                 <div className="summary-row total-row">
                   <span>Total:</span>
                   <span className="total-amount">₱{totals.total.toFixed(2)}</span>

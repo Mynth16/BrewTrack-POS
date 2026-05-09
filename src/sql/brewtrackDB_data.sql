@@ -691,19 +691,19 @@ INSERT INTO productIngredient (productID, ingredientID, quantityRequired) VALUES
 (76, 14, 0.05);  -- Sugar
 
 -- ORDERS (12 realistic orders across 3 days)
-INSERT INTO orders (orderID, accountID, dateAndTime, discountPercent, taxAmount, paymentMethod) VALUES
-(1,  2, '2025-03-01 09:15:00', 0.00,  0.00, 'Cash'),
-(2,  2, '2025-03-01 10:42:00', 0.00,  0.00, 'Cash'),
-(3,  2, '2025-03-01 12:05:00', 10.00, 0.00, 'GCash'),
-(4,  2, '2025-03-01 14:30:00', 0.00,  0.00, 'Cash'),
-(5,  3, '2025-03-01 16:55:00', 0.00,  0.00, 'Cash'),
-(6,  3, '2025-03-02 09:30:00', 0.00,  0.00, 'Cash'),
-(7,  3, '2025-03-02 11:20:00', 5.00,  0.00, 'Credit Card'),
-(8,  3, '2025-03-02 13:10:00', 0.00,  0.00, 'GCash'),
-(9,  2, '2025-03-02 15:45:00', 0.00,  0.00, 'Cash'),
-(10, 2, '2025-03-02 17:30:00', 0.00,  0.00, 'Cash'),
-(11, 1, '2025-03-03 10:00:00', 0.00,  0.00, 'Cash'),
-(12, 3, '2025-03-03 13:45:00', 15.00, 0.00, 'Credit Card');
+INSERT INTO orders (orderID, accountID, dateAndTime, discountPercent, paymentMethod) VALUES
+(1,  2, '2025-03-01 09:15:00', 0.00,  'Cash'),
+(2,  2, '2025-03-01 10:42:00', 0.00,  'Cash'),
+(3,  2, '2025-03-01 12:05:00', 10.00, 'GCash'),
+(4,  2, '2025-03-01 14:30:00', 0.00,  'Cash'),
+(5,  3, '2025-03-01 16:55:00', 0.00,  'Cash'),
+(6,  3, '2025-03-02 09:30:00', 0.00,  'Cash'),
+(7,  3, '2025-03-02 11:20:00', 5.00,  'Credit Card'),
+(8,  3, '2025-03-02 13:10:00', 0.00,  'GCash'),
+(9,  2, '2025-03-02 15:45:00', 0.00,  'Cash'),
+(10, 2, '2025-03-02 17:30:00', 0.00,  'Cash'),
+(11, 1, '2025-03-03 10:00:00', 0.00,  'Cash'),
+(12, 3, '2025-03-03 13:45:00', 15.00, 'Credit Card');
 
 -- ORDER ITEMS
 INSERT INTO orderItem (orderItemID, orderID, productID, productPriceAtTime, lineTotal, productQuantity) VALUES

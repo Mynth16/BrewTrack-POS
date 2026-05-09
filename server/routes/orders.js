@@ -140,12 +140,12 @@ router.post('/:orderId/items', authMiddleware, async (req, res) => {
 /**
  * POST /api/orders/:orderId/complete
  * Finalize an order (mark as completed with payment details)
- * Body: { paymentMethod, taxAmount }
+ * Body: { paymentMethod }
  */
 router.post('/:orderId/complete', authMiddleware, async (req, res) => {
     try {
         const { orderId } = req.params;
-        const { paymentMethod, taxAmount } = req.body;
+        const { paymentMethod } = req.body;
 
         if (!paymentMethod) {
             return res.status(400).json({
@@ -158,7 +158,7 @@ router.post('/:orderId/complete', authMiddleware, async (req, res) => {
         const totals = await calculateOrderTotal(orderId);
 
         // Finalize the order in database
-        const success = await finalizeOrder(orderId, paymentMethod, taxAmount || 0);
+        const success = await finalizeOrder(orderId, paymentMethod);
 
         if (!success) {
             return res.status(404).json({
