@@ -120,6 +120,9 @@ export default function Pos() {
         <div className="pos-main">
           {/* Product Grid Section */}
           <div className="pos-products-section">
+            {/* Page Title */}
+            <h1 className="pos-title">Point of Sale</h1>
+
             {/* Search Bar */}
             <div className="pos-search">
               <input
@@ -158,18 +161,20 @@ export default function Pos() {
             )}
 
             {/* Product Grid */}
-            <div className="products-grid">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map(product => (
-                  <ProductCard
-                    key={product.productID}
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                  />
-                ))
-              ) : (
-                <div className="no-products">No products found</div>
-              )}
+            <div className="products-container">
+              <div className="products-grid">
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map(product => (
+                    <ProductCard
+                      key={product.productID}
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                    />
+                  ))
+                ) : (
+                  <div className="no-products">No products found</div>
+                )}
+              </div>
             </div>
           </div>
 
