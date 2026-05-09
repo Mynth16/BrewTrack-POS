@@ -18,6 +18,13 @@
   height: 100vh;
   background-color: var(--cream-bg);
   overflow: hidden;
+  margin-left: 80px;
+}
+
+@media (max-width: 768px) {
+  .pos-container {
+    margin-left: 60px;
+  }
 }
 
 .pos-main {

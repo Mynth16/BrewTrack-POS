@@ -1,0 +1,39 @@
+/* Main Layout Adjustments for Sidebar */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Offset content to accommodate fixed sidebar */
+main {
+  margin-left: 80px;
+}
+
+/* General page container styling */
+.page-container {
+  margin-left: 80px;
+  min-height: 100vh;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  main {
+    margin-left: 60px;
+  }
+
+  .page-container {
+    margin-left: 60px;
+  }
+}

@@ -6,7 +6,8 @@
   min-height: 100vh;
   margin: 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  margin-left: 80px;
 }
 
 .dashboard-header {
@@ -25,28 +26,30 @@
   margin: 0;
 }
 
-.logout-button {
-  padding: 10px 24px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
-  background-color: #d32f2f;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.logout-button:hover {
-  background-color: #b71c1c;
-}
-
 .dashboard-content {
   padding: 40px;
+  flex: 1;
 }
 
 .dashboard-content p {
   font-size: 18px;
   color: #555;
-  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    margin-left: 60px;
+  }
+
+  .dashboard-header {
+    padding: 15px 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 20px;
+  }
+
+  .dashboard-content {
+    padding: 20px;
+  }
 }

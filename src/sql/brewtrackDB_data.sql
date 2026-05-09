@@ -829,8 +829,6 @@ INSERT INTO orderItemAddOn (orderItemAddOnID, orderItemID, addOnID, addOnPriceAt
 
 
 -- Populate imageURL for existing products
--- Run this after brewtrackDB_schema.sql and brewtrackDB_data.sql
-USE brewtrackdb;
 
 -- COFFEE (9 products)
 UPDATE product SET imageURL = '/products/Coffee/cafeLatte.jpg' WHERE productName = 'Cafe Latte';

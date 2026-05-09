@@ -6,6 +6,13 @@
     min-height: 100vh;
     display: flex;
     flex-direction: row;
+    margin-left: 80px;
+}
+
+@media (max-width: 768px) {
+    .inventory-container {
+        margin-left: 60px;
+    }
 }
 
 section {
