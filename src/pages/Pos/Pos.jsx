@@ -5,6 +5,8 @@ import Navigation from '../../components/Navigation/Navigation';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import CartItemRow from '../../components/CartItemRow/CartItemRow';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
+import Payment from '../../components/Payment/Payment';
+import Receipt from '../../components/Receipt/Receipt';
 import './Pos.css';
 
 // Main POS Component
@@ -32,6 +34,11 @@ export default function Pos() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddFeedback, setShowAddFeedback] = useState(false);
   const [addFeedbackText, setAddFeedbackText] = useState('');
+
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [orderData, setOrderData] = useState(null);
 
   // Fetch products on component mount
   useEffect(() => {
@@ -102,6 +109,29 @@ export default function Pos() {
     setAddFeedbackText(`${product.name} (${size}) added to cart!`);
     setShowAddFeedback(true);
     setTimeout(() => setShowAddFeedback(false), 2000);
+  };
+
+  // Handle payment modal opening
+  const handleOpenPaymentModal = () => {
+    setShowPaymentModal(true);
+  };
+
+  // Handle payment modal closing (cancel)
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+  };
+
+  // Handle successful payment completion
+  const handlePaymentComplete = (order) => {
+    setOrderData(order);
+    setShowPaymentModal(false);
+    setShowReceipt(true);
+  };
+
+  // Handle receipt closing
+  const handleCloseReceipt = () => {
+    setShowReceipt(false);
+    setOrderData(null);
   };
 
   return (
@@ -247,16 +277,12 @@ export default function Pos() {
                   <span className="total-amount">₱{totals.total.toFixed(2)}</span>
                 </div>
 
-                <div className="checkout-payment-fields">
-                  <label>Cash Tendered:</label>
-                  <input type="text" placeholder="₱ 0.00" className="payment-input" />
-
-                  <label>Change:</label>
-                  <div className="change-display">XXX</div>
-                </div>
-
                 <div className="checkout-actions">
-                  <button className="btn-checkout" disabled={cartItems.length === 0}>
+                  <button 
+                    className="btn-checkout" 
+                    disabled={cartItems.length === 0}
+                    onClick={handleOpenPaymentModal}
+                  >
                     Proceed to Payment
                   </button>
                 </div>
@@ -264,6 +290,24 @@ export default function Pos() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <Payment 
+          cart={cartItems}
+          cartTotals={totals}
+          onClose={handleClosePaymentModal}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
+
+      {/* Receipt Modal */}
+      {showReceipt && orderData && (
+        <Receipt 
+          order={orderData}
+          onClose={handleCloseReceipt}
+        />
       )}
     </div>
   );

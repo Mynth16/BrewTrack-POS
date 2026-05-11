@@ -8,8 +8,8 @@ USE brewtrackdb;
 -- 1. sp_CreateOrder
 -- ============================================================
 -- Creates a complete order with items, variants, and add-ons
--- Returns: orderID on success, NULL on error
--- Usage: CALL sp_CreateOrder(accountID, discountPercent, paymentMethod, @orderID);
+-- Returns: orderID via SELECT result set
+-- Usage: CALL sp_CreateOrder(accountID, discountPercent, paymentMethod);
 -- ============================================================
 
 DELIMITER $$
@@ -17,11 +17,11 @@ DELIMITER $$
 CREATE PROCEDURE sp_CreateOrder(
     IN p_accountID INT,
     IN p_discountPercent DECIMAL(5, 2),
-    IN p_paymentMethod VARCHAR(20),
-    OUT p_orderID INT
+    IN p_paymentMethod VARCHAR(20)
 )
-READS SQL DATA
+MODIFIES SQL DATA
 BEGIN
+    DECLARE v_orderID INT;
     DECLARE v_error INT DEFAULT 0;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET v_error = 1;
     
@@ -34,13 +34,15 @@ BEGIN
     IF p_paymentMethod IS NULL THEN SET p_paymentMethod = 'Cash'; END IF;
     
     -- Create order
-    INSERT INTO orders (accountID, dateAndTime, discountPercent, paymentMethod)
-    VALUES (p_accountID, NOW(), p_discountPercent, p_paymentMethod);
+    INSERT INTO orders (accountID, dateAndTime, discountPercent, paymentMethod, status)
+    VALUES (p_accountID, NOW(), p_discountPercent, p_paymentMethod, 'pending');
     
-    SET p_orderID = LAST_INSERT_ID();
+    SET v_orderID = LAST_INSERT_ID();
     
-    IF v_error = 1 THEN
-        SET p_orderID = NULL;
+    IF v_error = 0 THEN
+        SELECT v_orderID as orderID;
+    ELSE
+        SELECT NULL as orderID;
     END IF;
 END$$
 
@@ -49,7 +51,8 @@ END$$
 -- ============================================================
 -- Adds an item to an order with variant (drink size/flavor/simple)
 -- Handles automatic insertion to appropriate bridge table
--- Usage: CALL sp_AddOrderItem(orderID, productID, variantID, quantity, priceAtTime, @orderItemID);
+-- Returns: orderItemID via SELECT result set
+-- Usage: CALL sp_AddOrderItem(orderID, productID, variantID, quantity, priceAtTime);
 -- ============================================================
 
 CREATE PROCEDURE sp_AddOrderItem(
@@ -57,11 +60,11 @@ CREATE PROCEDURE sp_AddOrderItem(
     IN p_productID    INT,
     IN p_variantID    INT,
     IN p_quantity     INT,
-    IN p_priceAtTime  DECIMAL(10, 2),
-    OUT p_orderItemID INT
+    IN p_priceAtTime  DECIMAL(10, 2)
 )
 MODIFIES SQL DATA
 BEGIN
+    DECLARE v_orderItemID   INT;
     DECLARE v_productType   VARCHAR(20);
     DECLARE v_lineTotal     DECIMAL(10, 2);
     DECLARE v_ingredientID  INT;
@@ -77,7 +80,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SET p_orderItemID = NULL;
+        SELECT NULL as orderItemID;
     END;
 
     START TRANSACTION;
@@ -111,18 +114,18 @@ BEGIN
     INSERT INTO orderItem (orderID, productID, productPriceAtTime, lineTotal, productQuantity)
     VALUES (p_orderID, p_productID, p_priceAtTime, v_lineTotal, p_quantity);
 
-    SET p_orderItemID = LAST_INSERT_ID();
+    SET v_orderItemID = LAST_INSERT_ID();
 
     -- Insert into appropriate bridge table
     IF v_productType = 'drink' THEN
         INSERT INTO orderItemDrink (orderItemID, drinkID)
-        VALUES (p_orderItemID, p_variantID);
+        VALUES (v_orderItemID, p_variantID);
     ELSEIF v_productType = 'flavoredItem' THEN
         INSERT INTO orderItemFlavoredItem (orderItemID, flavoredItemID)
-        VALUES (p_orderItemID, p_variantID);
+        VALUES (v_orderItemID, p_variantID);
     ELSEIF v_productType = 'simpleProduct' THEN
         INSERT INTO orderItemSimpleProduct (orderItemID, simpleProductID)
-        VALUES (p_orderItemID, p_variantID);
+        VALUES (v_orderItemID, p_variantID);
     END IF;
 
     -- Deduct ingredient stock
@@ -140,6 +143,7 @@ BEGIN
     CLOSE cur_ingredients;
 
     COMMIT;
+    SELECT v_orderItemID as orderItemID;
 END$$
 
 
@@ -309,9 +313,9 @@ BEGIN
     DECLARE v_discountAmount DECIMAL(10, 2);
     DECLARE v_finalTotal DECIMAL(10, 2);
     
-    -- Get order details
+    -- Get order details including add-ons
     SELECT
-        COALESCE(SUM(oi.lineTotal), 0),
+        COALESCE(SUM(oi.lineTotal + COALESCE((SELECT SUM(oia.addOnPriceAtTime * oia.addOnQuantity) FROM orderItemAddOn oia WHERE oia.orderItemID = oi.orderItemID), 0)), 0),
         COALESCE(o.discountPercent, 0)
     INTO v_subtotal, v_discountPercent
     FROM orders o
@@ -498,6 +502,56 @@ BEGIN
     GROUP BY p.productID, p.productName, p.category
     ORDER BY totalRevenue DESC
     LIMIT v_limit;
+END$$
+
+-- ============================================================
+-- 12. sp_GetVariantIdBySize
+-- ============================================================
+-- Get the variant ID (drinkID/flavoredItemID/simpleProductID) from product and size/flavor
+-- Returns: variantID, variantName, price for the specified product and size
+-- Usage: CALL sp_GetVariantIdBySize(productID, 'size_or_flavor_string');
+-- ============================================================
+
+CREATE PROCEDURE sp_GetVariantIdBySize(
+    IN p_productID INT,
+    IN p_variantName VARCHAR(50),
+    OUT p_variantID INT
+)
+READS SQL DATA
+BEGIN
+    DECLARE v_productType VARCHAR(20);
+    
+    -- Get product type
+    SELECT productType INTO v_productType
+    FROM product
+    WHERE productID = p_productID;
+    
+    IF v_productType IS NULL THEN
+        SET p_variantID = NULL;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Product not found';
+    END IF;
+    
+    -- Get variant ID based on product type
+    IF v_productType = 'drink' THEN
+        SELECT drinkID INTO p_variantID
+        FROM drink
+        WHERE productID = p_productID AND size = p_variantName
+        LIMIT 1;
+    ELSEIF v_productType = 'flavoredItem' THEN
+        SELECT flavoredItemID INTO p_variantID
+        FROM flavoredItem
+        WHERE productID = p_productID AND flavorName = p_variantName
+        LIMIT 1;
+    ELSEIF v_productType = 'simpleProduct' THEN
+        SELECT simpleProductID INTO p_variantID
+        FROM simpleProduct
+        WHERE productID = p_productID
+        LIMIT 1;
+    END IF;
+    
+    IF p_variantID IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Variant not found';
+    END IF;
 END$$
 
 DELIMITER ;
