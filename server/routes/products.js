@@ -65,7 +65,7 @@ async function transformProduct(dbProduct) {
         id: productID,
         name: productName,
         productName,
-        description: `${variantCount} variant(s) available`,
+        description: '',
         category,
         categoryID: category, // Use category as ID for now
         price: parseFloat(basePrice),
