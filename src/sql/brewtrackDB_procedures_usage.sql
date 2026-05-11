@@ -8,7 +8,6 @@
 CALL sp_CreateOrder(
     2,           -- accountID (cashier: Barias)
     0,           -- discountPercent
-    0,           -- taxAmount
     'Cash',      -- paymentMethod
     @orderID
 );

@@ -12,15 +12,25 @@ const pool = mysql.createPool({
 });
 
 export async function getAccountByUsername(username) {
-    try {
-        const [rows] = await pool.query(
-            'SELECT accountID, username, password, role, status FROM account WHERE username = ?',
-            [username]
-        );
-        return rows[0] || null;
-    } catch (error) {
-        console.error('Database query error:', error);
-        throw error;
+    const maxRetries = 3;
+    const retryDelay = 100; // ms
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const [rows] = await pool.query(
+                'SELECT accountID, username, password, role, status FROM account WHERE username = ?',
+                [username]
+            );
+            return rows[0] || null;
+        } catch (error) {
+            if (attempt < maxRetries - 1 && (error.code === 'PROTOCOL_CONNECTION_LOST' || error.code === 'ECONNRESET')) {
+                console.warn(`Database connection error, retrying (${attempt + 1}/${maxRetries}):`, error.message);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            } else {
+                console.error('Database query error:', error);
+                throw error;
+            }
+        }
     }
 }
 
@@ -74,7 +84,7 @@ export async function getAvailableAddOns(productId) {
 // Order Database Functions
 export async function createOrder(accountId, discountPercent) {
     try {
-        const [rows] = await pool.query('CALL sp_CreateOrder(?, ?)', [accountId, discountPercent]);
+        const [rows] = await pool.query('CALL sp_CreateOrder(?, ?, ?)', [accountId, discountPercent, 'cash']);
         return rows[0][0] || null; // Returns { orderID }
     } catch (error) {
         console.error('Error creating order:', error);
@@ -89,6 +99,52 @@ export async function addOrderItem(orderId, productId, size, quantity, priceAtTi
         return rows[0][0] || null; // Returns { orderItemID }
     } catch (error) {
         console.error('Error adding order item:', error);
+        throw error;
+    }
+}
+
+export async function getVariantIdBySize(productId, variantName) {
+    try {
+        // Get product type first
+        const [productRows] = await pool.query(
+            'SELECT productType FROM product WHERE productID = ?',
+            [productId]
+        );
+        
+        if (!productRows || productRows.length === 0) {
+            throw new Error('Product not found');
+        }
+        
+        const productType = productRows[0].productType;
+        let variantId = null;
+        
+        if (productType === 'drink') {
+            const [drinkRows] = await pool.query(
+                'SELECT drinkID FROM drink WHERE productID = ? AND size = ? LIMIT 1',
+                [productId, variantName]
+            );
+            variantId = drinkRows[0]?.drinkID || null;
+        } else if (productType === 'flavoredItem') {
+            const [flavorRows] = await pool.query(
+                'SELECT flavoredItemID FROM flavoredItem WHERE productID = ? AND flavorName = ? LIMIT 1',
+                [productId, variantName]
+            );
+            variantId = flavorRows[0]?.flavoredItemID || null;
+        } else if (productType === 'simpleProduct') {
+            const [simpleRows] = await pool.query(
+                'SELECT simpleProductID FROM simpleProduct WHERE productID = ? LIMIT 1',
+                [productId]
+            );
+            variantId = simpleRows[0]?.simpleProductID || null;
+        }
+        
+        if (!variantId) {
+            throw new Error(`Variant not found for product ${productId} with variant name ${variantName}`);
+        }
+        
+        return variantId;
+    } catch (error) {
+        console.error('Error getting variant ID by size:', error);
         throw error;
     }
 }
@@ -124,10 +180,10 @@ export async function getOrderHistory(orderId) {
     }
 }
 
-export async function finalizeOrder(orderId, paymentMethod, taxAmount) {
+export async function finalizeOrder(orderId, paymentMethod) {
     try {
-        const query = `UPDATE orders SET paymentMethod = ?, taxAmount = ?, status = 'completed' WHERE orderID = ?`;
-        const [result] = await pool.query(query, [paymentMethod, taxAmount, orderId]);
+        const query = `UPDATE orders SET paymentMethod = ?, status = 'completed' WHERE orderID = ?`;
+        const [result] = await pool.query(query, [paymentMethod, orderId]);
         return result.affectedRows > 0;
     } catch (error) {
         console.error('Error finalizing order:', error);

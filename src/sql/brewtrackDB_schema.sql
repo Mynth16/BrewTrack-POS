@@ -103,8 +103,8 @@ CREATE TABLE orders (
     accountID       INT             NOT NULL,
     dateAndTime     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     discountPercent DECIMAL(5, 2)   DEFAULT 0,
-    taxAmount       DECIMAL(10, 2)  DEFAULT 0,
     paymentMethod   VARCHAR(20),
+    status          ENUM('pending', 'completed', 'void') DEFAULT 'pending',
     FOREIGN KEY (accountID) REFERENCES account(accountID)
 );
 
@@ -166,8 +166,3 @@ CREATE INDEX idx_order_account     ON orders(accountID);
 CREATE INDEX idx_order_date        ON orders(dateAndTime);
 CREATE INDEX idx_orderitem_order   ON orderItem(orderID);
 CREATE INDEX idx_orderitem_product ON orderItem(productID);
-
-CREATE INDEX idx_audit_record      ON audit_trail(recordID);
-CREATE INDEX idx_audit_table       ON audit_trail(tableName);
-CREATE INDEX idx_audit_changed_at  ON audit_trail(changedAt);
-CREATE INDEX idx_pi_ingredient     ON productIngredient(ingredientID);

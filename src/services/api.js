@@ -87,7 +87,7 @@ export const orderService = {
     },
 
   
-    async completeOrder(orderId, paymentMethod, taxAmount, token) {
+    async completeOrder(orderId, paymentMethod, token) {
         try {
             const response = await fetch(`${API_BASE_URL}/orders/${orderId}/complete`, {
             method: 'POST',
@@ -95,7 +95,7 @@ export const orderService = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ paymentMethod, taxAmount }),
+            body: JSON.stringify({ paymentMethod }),
             });
 
             if (!response.ok) {

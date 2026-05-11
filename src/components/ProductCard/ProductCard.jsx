@@ -21,7 +21,7 @@ export default function ProductCard({ product, onAddToCart }) {
       </div>
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        <p className="product-desc">{product.description}</p>
+        {product.description && <p className="product-desc">{product.description}</p>}
         
         {product.sizes.length > 0 && (
           <div className="product-sizes">

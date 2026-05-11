@@ -5,17 +5,15 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [discountPercent, setDiscountPercent] = useState(0);
-    const [taxPercent, setTaxPercent] = useState(12); // Default 12% tax
 
     // Load cart from localStorage on mount
     useEffect(() => {
         const savedCart = localStorage.getItem('brewtrack_cart');
         if (savedCart) {
             try {
-                const { items, discount, tax } = JSON.parse(savedCart);
+                const { items, discount } = JSON.parse(savedCart);
                 setCartItems(items || []);
                 setDiscountPercent(discount || 0);
-                setTaxPercent(tax || 12);
             } catch (error) {
                 console.error('Error loading cart from localStorage:', error);
             }
@@ -27,45 +25,33 @@ export const CartProvider = ({ children }) => {
         const cartData = {
             items: cartItems,
             discount: discountPercent,
-            tax: taxPercent,
         };
         localStorage.setItem('brewtrack_cart', JSON.stringify(cartData));
-    }, [cartItems, discountPercent, taxPercent]);
+    }, [cartItems, discountPercent]);
 
-    // Generate unique ID for cart items (product + size + selected add-ons)
-    const generateItemId = (productId, size, addOns = []) => {
-        const addOnStr = addOns.sort().join('_');
-        return `${productId}_${size}_${addOnStr}`;
+    // Generate unique ID for each cart item (includes timestamp to ensure uniqueness)
+    const generateItemId = (productId, size) => {
+        return `${productId}_${size}_${Date.now()}_${Math.random()}`;
     };
 
-    // Add product to cart
+    // Add product to cart (always creates a new independent item with quantity 1)
     const addToCart = (product, quantity = 1, size = null) => {
         const sizeData = size ? product.sizes.find(s => s.label === size) : null;
         const price = sizeData ? sizeData.price : product.price;
 
         setCartItems(prevItems => {
-            const itemId = generateItemId(product.id, size, []);
-            const existingItemIndex = prevItems.findIndex(item => item.id === itemId);
-
-            if (existingItemIndex > -1) {
-                // Item already exists, increment quantity
-                const updatedItems = [...prevItems];
-                updatedItems[existingItemIndex].quantity += quantity;
-                return updatedItems;
-            } else {
-                // Add new item
-                const newItem = {
-                    id: itemId,
-                    productId: product.id,
-                    productName: product.name,
-                    size: size || 'N/A',
-                    price: price,
-                    quantity: quantity,
-                    addOns: [], // Array of { id, name, price }
-                    image: product.image,
-                };
-                return [...prevItems, newItem];
-            }
+            // Always create a new item with quantity 1 (no merging)
+            const newItem = {
+                id: generateItemId(product.id, size),
+                productId: product.id,
+                productName: product.name,
+                size: size || 'N/A',
+                price: price,
+                quantity: 1,
+                addOns: [], // Array of { id, name, price }
+                image: product.image,
+            };
+            return [...prevItems, newItem];
         });
     };
 
@@ -152,11 +138,9 @@ export const CartProvider = ({ children }) => {
             await orderService.addOrderItems(orderId, items, addOns, token);
 
             // Step 4: Complete order
-            const { totals: calculatedTotals } = calculateTotals();
             const completeData = await orderService.completeOrder(
                 orderId,
                 paymentMethod,
-                calculatedTotals.taxAmount,
                 token
             );
 
@@ -180,14 +164,12 @@ export const CartProvider = ({ children }) => {
 
         const discountAmount = (subtotal * discountPercent) / 100;
         const subtotalAfterDiscount = subtotal - discountAmount;
-        const taxAmount = (subtotalAfterDiscount * taxPercent) / 100;
-        const total = subtotalAfterDiscount + taxAmount;
+        const total = subtotalAfterDiscount;
 
         return {
             subtotal: parseFloat(subtotal.toFixed(2)),
             discountAmount: parseFloat(discountAmount.toFixed(2)),
             subtotalAfterDiscount: parseFloat(subtotalAfterDiscount.toFixed(2)),
-            taxAmount: parseFloat(taxAmount.toFixed(2)),
             total: parseFloat(total.toFixed(2)),
         };
     };
@@ -204,8 +186,6 @@ export const CartProvider = ({ children }) => {
         submitOrder,
         discountPercent,
         setDiscountPercent,
-        taxPercent,
-        setTaxPercent,
         totals,
         itemCount: cartItems.length,
     };

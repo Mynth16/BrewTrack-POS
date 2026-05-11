@@ -7,6 +7,7 @@ import {
     calculateOrderTotal,
     getOrderHistory,
     finalizeOrder,
+    getVariantIdBySize,
 } from '../db.js';
 
 const router = express.Router();
@@ -90,20 +91,25 @@ router.post('/:orderId/items', authMiddleware, async (req, res) => {
         const addedItems = [];
 
         // Add each item to the order
-        for (const item of items) {
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+            const item = items[itemIndex];
             const { productId, size, quantity, priceAtTime } = item;
 
+            // Resolve variant ID from size string
+            const variantId = await getVariantIdBySize(productId, size);
+
             const itemResult = await addOrderItem(
-            orderId,
-            productId,
-            size,
-            quantity,
-            priceAtTime
+                orderId,
+                productId,
+                variantId,
+                quantity,
+                priceAtTime
             );
             const orderItemId = itemResult.orderItemID || itemResult.order_item_id || itemResult[0];
 
             // Add add-ons for this item if provided
-             const itemAddOns = addOns[orderItemId] || [];
+            // Note: addOns object keys are array indices from frontend, not orderItemIds
+            const itemAddOns = addOns[itemIndex] || [];
             for (const addOn of itemAddOns) {
                 const { addOnId, price } = addOn;
                 await addOrderItemAddOn(orderItemId, addOnId, price, quantity);
@@ -140,12 +146,12 @@ router.post('/:orderId/items', authMiddleware, async (req, res) => {
 /**
  * POST /api/orders/:orderId/complete
  * Finalize an order (mark as completed with payment details)
- * Body: { paymentMethod, taxAmount }
+ * Body: { paymentMethod }
  */
 router.post('/:orderId/complete', authMiddleware, async (req, res) => {
     try {
         const { orderId } = req.params;
-        const { paymentMethod, taxAmount } = req.body;
+        const { paymentMethod } = req.body;
 
         if (!paymentMethod) {
             return res.status(400).json({
@@ -158,7 +164,7 @@ router.post('/:orderId/complete', authMiddleware, async (req, res) => {
         const totals = await calculateOrderTotal(orderId);
 
         // Finalize the order in database
-        const success = await finalizeOrder(orderId, paymentMethod, taxAmount || 0);
+        const success = await finalizeOrder(orderId, paymentMethod);
 
         if (!success) {
             return res.status(404).json({
@@ -167,14 +173,43 @@ router.post('/:orderId/complete', authMiddleware, async (req, res) => {
             });
         }
 
+        // Get full order details for response
+        const orderData = await getOrderHistory(orderId);
+
+        // Normalize response field names to match frontend expectations
+        // Ensure all numeric fields are converted to numbers
+        const normalizedOrder = {
+            id: orderData[0]?.orderID || orderId,
+            totalPrice: Number(totals?.finalTotal) || 0,
+            total: Number(totals?.finalTotal) || 0,
+            createdAt: orderData[0]?.dateAndTime,
+            paymentMethod,
+            discountPercent: Number(totals?.discountPercent) || 0,
+            discountAmount: Number(totals?.discountAmount) || 0,
+            items: orderData.map(item => {
+                // Parse add-ons for this item
+                const addOnList = item.addOns && item.addOns.length > 0 && item.addOns !== 'None'
+                    ? item.addOns
+                        .split(',')
+                        .map(a => a.trim())
+                        .filter(a => a && a !== 'None')
+                    : [];
+                
+                return {
+                    productName: item.productName,
+                    size: item.variant || 'N/A',
+                    quantity: Number(item.quantity) || 0,
+                    unitPrice: Number(item.unitPrice) || 0,
+                    lineTotal: Number(item.lineTotal) || 0,
+                    addOns: addOnList,
+                };
+            }),
+            subtotal: Number(totals?.subtotal) || 0,
+        };
+
         res.json({
             success: true,
-            data: {
-                orderId,
-                status: 'completed',
-                paymentMethod,
-                totals,
-            },
+            data: normalizedOrder,
         });
     } catch (error) {
         console.error('Error completing order:', error);

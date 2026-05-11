@@ -155,6 +155,7 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
   flex: 1;
+  align-items: start;
 }
 
 .no-products {
@@ -273,39 +274,14 @@
   font-size: 16px;
   font-weight: 700;
   padding: 12px 0;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
   margin: 8px 0;
+  color: var(--text-light)
 }
 
 .total-amount {
   color: var(--accent-green);
   font-size: 18px;
-}
-
-/* Payment Fields */
-.checkout-payment-fields {
-  padding: 12px 0;
-  font-size: 12px;
-}
-
-.checkout-payment-fields label {
-  display: block;
-  margin-top: 8px;
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.payment-input,
-.change-display {
-  width: 100%;
-  padding: 8px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: var(--text-light);
-  font-size: 13px;
-  text-align: right;
 }
 
 .payment-input {
