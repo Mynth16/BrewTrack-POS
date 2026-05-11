@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getProductMenu, getProductVariants, getAvailableAddOns } from '../db.js';
+import { getProductMenu, getProductVariants, getAvailableAddOns, getProductCategories } from '../db.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -79,6 +79,16 @@ async function transformProduct(dbProduct) {
         variantCount,
     };
 }
+
+router.get('/categories', async (req, res) => {
+    try {
+        const categories = await getProductCategories();
+        res.json({ success: true, data: categories });
+    } catch (error) {
+        console.error('Error getting all distinct categories: ', error);
+        res.status(500).json({ success: false, error: 'Error getting all distinct categories'});
+    }
+})
 
 /**
  * GET /api/products

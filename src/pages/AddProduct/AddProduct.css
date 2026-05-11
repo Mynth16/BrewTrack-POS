@@ -1,0 +1,61 @@
+/*
+IMPORTANT REMINDER:
+Si css for add product page, 
+nag-r-reuse ning style and classNames from different css files.
+(From update ingredient.css) - Especially the forms
+Might rename again later if needed.
+*/
+
+/* GENERAL (APPLIES TO BOTH ADD INGREDIENT AND ADD PRODUCT VIEW */
+.add-product-container {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+
+    color:white;
+}
+
+.form-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    padding-bottom: 15px;
+}
+
+.add-product-ingredient-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.add-product-ingredient-buttons button {
+    padding: 8px;
+}
+
+/*FOR THE ADD PRODUCTS VIEW*/
+
+.add-product-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-width: 50%;
+    
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid black;
+    background: linear-gradient(to top, #000000, #43341F);
+}
+
+/*FOR THE ADD INGREDIENTS VIEW*/
+.add-ingredient-form-wrapper{
+    display: flex;
+    flex-direction: column;
+    
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid black;
+    background: linear-gradient(to top, #000000, #43341F);
+}

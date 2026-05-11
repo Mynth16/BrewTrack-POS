@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import ingredientsRoutes from './routes/ingredients.js';
 import productsRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
+import addOnRoutes from './routes/addOn.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/ingredients', ingredientsRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/addons', addOnRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
