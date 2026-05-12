@@ -5,8 +5,8 @@ import authRoutes from './routes/auth.js';
 import ingredientsRoutes from './routes/ingredients.js';
 import productsRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
+import addOnRoutes from './routes/addOn.js';
 import usersRoutes from './routes/users.js';
-
 dotenv.config();
 
 const app = express();
@@ -25,6 +25,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/ingredients', ingredientsRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/addons', addOnRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

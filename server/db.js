@@ -440,4 +440,28 @@ export async function addIngredient(ingredientName, stockQuantity, unit, minStoc
     }
 }
 
+export async function getProductCategories() {
+    try {
+        const [rows] = await pool.query(
+            'SELECT DISTINCT category FROM product'
+        );
+        return rows.map(row => row.category);
+    } catch (error) {
+        console.error('Failed to get all distinct categories: ', error);
+        throw error;
+    }
+}
+
+export async function getAllAddOns() {
+    try {
+        const [rows] = await pool.query(
+            'SELECT addOnID, addOnName, addOnPrice FROM addOn'
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get add-ons: ', error);
+        throw error;
+    }
+}
+
 export default pool;
