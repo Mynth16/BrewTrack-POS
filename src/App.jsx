@@ -6,6 +6,7 @@ import Inventory from './pages/Inventory/Inventory';
 import UpdateIngredient from './pages/UpdateIngredient/UpdateIngredient.jsx';
 import AddProduct from './pages/AddProduct/AddProduct.jsx';
 import UpdateProduct from './pages/UpdateProduct/UpdateProduct.jsx';
+import UserManager from './pages/UserManager/UserManager.jsx';
 import './css/App.css';
 import Pos from './pages/Pos/Pos';
 import { CartProvider } from './context/CartContext';
@@ -58,6 +59,11 @@ function AppRoutes() {
       <Route path = "/inventory/update-product/:productID" element = {
         <ProtectedRoute>
           <UpdateProduct />
+        </ProtectedRoute>
+      } />
+      <Route path = "/user-manager" element = {
+        <ProtectedRoute>
+          <UserManager />
         </ProtectedRoute>
       } />
       <Route path="/" element={<Navigate to="/login" replace />} />

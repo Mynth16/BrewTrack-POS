@@ -50,6 +50,208 @@ export async function verifyPassword(plainPassword, hashedPassword) {
     return bcrypt.compare(plainPassword, hashedPassword);
 }
 
+export async function hashPassword(plainPassword) {
+    const saltRounds = 10;
+    return bcrypt.hash(plainPassword, saltRounds);
+}
+
+export async function getUserByUsername(username) {
+    try {
+        const [rows] = await pool.query(
+            'SELECT a.accountID, a.username FROM account a WHERE a.username = ?',
+            [username]
+        );
+        return rows[0] || null;
+    } catch (error) {
+        console.error('Database query error:', error);
+        throw error;
+    }
+}
+
+export async function getUser(accountID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT 
+                a.accountID,
+                a.employeeID,
+                a.username,
+                a.role,
+                a.status,
+                e.firstName,
+                e.middleName,
+                e.lastName,
+                e.phoneNumber
+            FROM account a
+            JOIN employee e ON a.employeeID = e.employeeID
+            WHERE a.accountID = ?`,
+            [accountID]
+        );
+        return rows[0] || null;
+    } catch (error) {
+        console.error('Database query error:', error);
+        throw error;
+    }
+}
+
+export async function getAllActiveUsers() {
+    try {
+        const [rows] = await pool.query(
+            `SELECT 
+                a.accountID,
+                a.employeeID,
+                a.username,
+                a.role,
+                a.status,
+                e.firstName,
+                e.middleName,
+                e.lastName,
+                e.phoneNumber
+            FROM account a
+            JOIN employee e ON a.employeeID = e.employeeID
+            WHERE a.status = 'Active'
+            ORDER BY e.lastName, e.firstName`
+        );
+        return rows || [];
+    } catch (error) {
+        console.error('Database query error:', error);
+        throw error;
+    }
+}
+
+export async function createUser(userData) {
+    const { firstName, middleName, lastName, phoneNumber, username, role, password } = userData;
+    let connection;
+    
+    try {
+        connection = await pool.getConnection();
+        
+        // Start transaction
+        await connection.beginTransaction();
+        
+        // Insert employee
+        const [employeeResult] = await connection.query(
+            'INSERT INTO employee (firstName, middleName, lastName, phoneNumber) VALUES (?, ?, ?, ?)',
+            [firstName, middleName, lastName, phoneNumber]
+        );
+        
+        const employeeID = employeeResult.insertId;
+        
+        // Insert account
+        const [accountResult] = await connection.query(
+            'INSERT INTO account (employeeID, username, role, password, status) VALUES (?, ?, ?, ?, ?)',
+            [employeeID, username, role, password, 'Active']
+        );
+        
+        const accountID = accountResult.insertId;
+        
+        // Commit transaction
+        await connection.commit();
+        
+        return {
+            accountID,
+            employeeID,
+            firstName,
+            middleName,
+            lastName,
+            phoneNumber,
+            username,
+            role,
+            status: 'Active'
+        };
+    } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error('Error creating user:', error);
+        throw error;
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+    }
+}
+
+export async function updateUser(accountID, userData) {
+    const { firstName, middleName, lastName, phoneNumber, username, role, password } = userData;
+    let connection;
+    
+    try {
+        connection = await pool.getConnection();
+        
+        // Start transaction
+        await connection.beginTransaction();
+        
+        // Get employee ID
+        const [accountRows] = await connection.query(
+            'SELECT employeeID FROM account WHERE accountID = ?',
+            [accountID]
+        );
+        
+        if (!accountRows[0]) {
+            throw new Error('Account not found');
+        }
+        
+        const employeeID = accountRows[0].employeeID;
+        
+        // Update employee
+        await connection.query(
+            'UPDATE employee SET firstName = ?, middleName = ?, lastName = ?, phoneNumber = ? WHERE employeeID = ?',
+            [firstName, middleName, lastName, phoneNumber, employeeID]
+        );
+        
+        // Update account
+        if (password) {
+            await connection.query(
+                'UPDATE account SET username = ?, role = ?, password = ? WHERE accountID = ?',
+                [username, role, password, accountID]
+            );
+        } else {
+            await connection.query(
+                'UPDATE account SET username = ?, role = ? WHERE accountID = ?',
+                [username, role, accountID]
+            );
+        }
+        
+        // Commit transaction
+        await connection.commit();
+        
+        return {
+            accountID,
+            employeeID,
+            firstName,
+            middleName,
+            lastName,
+            phoneNumber,
+            username,
+            role,
+            status: 'Active'
+        };
+    } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error('Error updating user:', error);
+        throw error;
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+    }
+}
+
+export async function deactivateUser(accountID) {
+    try {
+        const [result] = await pool.query(
+            'UPDATE account SET status = ? WHERE accountID = ?',
+            ['Inactive', accountID]
+        );
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Error deactivating user:', error);
+        throw error;
+    }
+}
+
 // Product Database Functions
 export async function getProductMenu() {
     try {

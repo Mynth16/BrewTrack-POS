@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import ingredientsRoutes from './routes/ingredients.js';
 import productsRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
+import usersRoutes from './routes/users.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/ingredients', ingredientsRoutes);
 app.use('/api/products', productsRoutes);
