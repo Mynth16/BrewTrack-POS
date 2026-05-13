@@ -157,6 +157,28 @@ CREATE TABLE orderItemAddOn (
     FOREIGN KEY (addOnID)     REFERENCES addOn(addOnID)
 );
 
+-- NEW TABLE FOR DRINKS INGREDIENT
+CREATE TABLE drinkIngredient (
+    drinkIngredientID  INT             PRIMARY KEY AUTO_INCREMENT,
+    drinkID            INT             NOT NULL,
+    ingredientID       INT             NOT NULL,
+    quantityRequired   DECIMAL(10, 2)  NOT NULL,
+    FOREIGN KEY (drinkID)      REFERENCES drink(drinkID)           ON DELETE CASCADE,
+    FOREIGN KEY (ingredientID) REFERENCES ingredient(ingredientID) ON DELETE CASCADE,
+    UNIQUE KEY unique_drink_ingredient (drinkID, ingredientID)
+);
+
+-- ALSO ANOTHER NEW TABLE FOR FLAVORED ITEM INGREDIENTS
+CREATE TABLE flavoredItemIngredient (
+    flavoredItemIngredientID  INT             PRIMARY KEY AUTO_INCREMENT,
+    flavoredItemID            INT             NOT NULL,
+    ingredientID              INT             NOT NULL,
+    quantityRequired          DECIMAL(10, 2)  NOT NULL,
+    FOREIGN KEY (flavoredItemID) REFERENCES flavoredItem(flavoredItemID) ON DELETE CASCADE,
+    FOREIGN KEY (ingredientID)   REFERENCES ingredient(ingredientID)     ON DELETE CASCADE,
+    UNIQUE KEY unique_flavored_ingredient (flavoredItemID, ingredientID)
+);
+
 -- INDEXES FOR PERFORMANCE
 CREATE INDEX idx_product_type      ON product(productType);
 CREATE INDEX idx_product_category  ON product(category);

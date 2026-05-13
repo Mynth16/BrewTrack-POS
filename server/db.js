@@ -464,4 +464,292 @@ export async function getAllAddOns() {
     }
 }
 
+export async function addProduct(productName, productType, category, imageURL) {
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO product (productName, productType, category, imageURL)
+             VALUES (?, ?, ?, ?)`,
+            [productName, productType, category, imageURL || null]
+        );
+        return result.insertId;
+    } catch (error) {
+        console.error('Failed to add product: ', error);
+        throw error;
+    }
+}
+
+export async function addSimpleProduct(productID, price) {
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO simpleProduct (productID, price) VALUES (?, ?)`,
+            [productID, price]
+        );
+        return result.insertId;
+    } catch (error) {
+        console.error('Failed to add simple product: ', error);
+        throw error;
+    }
+}
+
+export async function addProductIngredients(productID, ingredients) {
+    try {
+        const values = ingredients.map(ing => [productID, ing.ingredientID, ing.quantityRequired]);
+        await pool.query(
+            `INSERT INTO productIngredient (productID, ingredientID, quantityRequired) VALUES ?`,
+            [values]
+        );
+    } catch (error) {
+        console.error('Failed to add product ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function addProductAddOns(productID, addOns) {
+    try {
+        const values = addOns.map(addOn => [productID, addOn.addOnID, addOn.quantityRequired]);
+        await pool.query(
+            `INSERT INTO productAddOn (productID, addOnID, quantityRequired) VALUES ?`,
+            [values]
+        );
+    } catch (error) {
+        console.error('Failed to add product add-ons: ', error);
+        throw error;
+    }
+}
+export async function addDrink(productID, size, price) {
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO drink (productID, size, price) VALUES (?, ?, ?)`,
+            [productID, size, price]
+        );
+        return result.insertId; // returns drinkID
+    } catch (error) {
+        console.error('Failed to add drink: ', error);
+        throw error;
+    }
+}
+
+export async function addDrinkIngredients(drinkID, ingredients) {
+    try {
+        const values = ingredients.map(ing => [drinkID, ing.ingredientID, ing.quantityRequired]);
+        await pool.query(
+            `INSERT INTO drinkIngredient (drinkID, ingredientID, quantityRequired) VALUES ?`,
+            [values]
+        );
+    } catch (error) {
+        console.error('Failed to add drink ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function addFlavoredItem(productID, flavorName, price) {
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO flavoredItem (productID, flavorName, price) VALUES (?, ?, ?)`,
+            [productID, flavorName, price]
+        );
+        return result.insertId;
+    } catch (error) {
+        console.error('Failed to add flavored item: ', error);
+        throw error;
+    }
+}
+
+export async function addFlavoredItemIngredients(flavoredItemID, ingredients) {
+    try {
+        const values = ingredients.map(ing => [flavoredItemID, ing.ingredientID, ing.quantityRequired]);
+        await pool.query(
+            `INSERT INTO flavoredItemIngredient (flavoredItemID, ingredientID, quantityRequired) VALUES ?`,
+            [values]
+        );
+    } catch (error) {
+        console.error('Failed to add flavored item ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function getProductByID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT productID, productName, productType, category, imageURL FROM product WHERE productID = ?`,
+            [productID]
+        );
+        return rows[0] || null;
+    } catch (error) {
+        console.error('Failed to get product: ', error);
+        throw error;
+    }
+}
+
+export async function getSimpleProductByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT price FROM simpleProduct WHERE productID = ?`,
+            [productID]
+        );
+        return rows[0] || null;
+    } catch (error) {
+        console.error('Failed to get simple product: ', error);
+        throw error;
+    }
+}
+
+export async function getProductIngredientsbyProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT pi.ingredientID, i.ingredientName, pi.quantityRequired
+             FROM productIngredient pi
+             JOIN ingredient i ON pi.ingredientID = i.ingredientID
+             WHERE pi.productID = ?`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get product ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function getProductAddOnsByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT pa.addOnID, a.addOnName, pa.quantityRequired
+             FROM productAddOn pa
+             JOIN addOn a ON pa.addOnID = a.addOnID
+             WHERE pa.productID = ?`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get product add-ons: ', error);
+        throw error;
+    }
+}
+
+export async function getDrinkIngredientsByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT d.drinkID, d.size, d.price, di.ingredientID, i.ingredientName, di.quantityRequired
+             FROM drink d
+             LEFT JOIN drinkIngredient di ON d.drinkID = di.drinkID
+             LEFT JOIN ingredient i ON di.ingredientID = i.ingredientID
+             WHERE d.productID = ?
+             ORDER BY d.drinkID`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get drink ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function getFlavoredItemIngredientsByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT fi.flavoredItemID, fi.flavorName, fi.price, fii.ingredientID, i.ingredientName, fii.quantityRequired
+             FROM flavoredItem fi
+             LEFT JOIN flavoredItemIngredient fii ON fi.flavoredItemID = fii.flavoredItemID
+             LEFT JOIN ingredient i ON fii.ingredientID = i.ingredientID
+             WHERE fi.productID = ?
+             ORDER BY fi.flavoredItemID`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get flavored item ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function updateProductBase(productID, productName, category, imageURL) {
+    try {
+        const [result] = await pool.query(
+            `UPDATE product SET productName = ?, category = ?, imageURL = ? WHERE productID = ?`,
+            [productName, category, imageURL || null, productID]
+        );
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Failed to update product: ', error);
+        throw error;
+    }
+}
+
+export async function updateSimpleProductPrice(productID, price) {
+    try {
+        const [result] = await pool.query(
+            `UPDATE simpleProduct SET price = ? WHERE productID = ?`,
+            [price, productID]
+        );
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Failed to update simple product price: ', error);
+        throw error;
+    }
+}
+
+export async function replaceProductIngredients(productID, ingredients) {
+    try {
+        await pool.query(`DELETE FROM productIngredient WHERE productID = ?`, [productID]);
+        if (ingredients.length > 0) {
+            const values = ingredients.map(i => [productID, i.ingredientID, i.quantityRequired]);
+            await pool.query(
+                `INSERT INTO productIngredient (productID, ingredientID, quantityRequired) VALUES ?`,
+                [values]
+            );
+        }
+    } catch (error) {
+        console.error('Failed to replace product ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function replaceProductAddOns(productID, addOns) {
+    try {
+        await pool.query(`DELETE FROM productAddOn WHERE productID = ?`, [productID]);
+        if (addOns.length > 0) {
+            const values = addOns.map(a => [productID, a.addOnID, a.quantityRequired]);
+            await pool.query(
+                `INSERT INTO productAddOn (productID, addOnID, quantityRequired) VALUES ?`,
+                [values]
+            );
+        }
+    } catch (error) {
+        console.error('Failed to replace product add-ons: ', error);
+        throw error;
+    }
+}
+
+export async function replaceDrinkIngredients(drinkID, ingredients) {
+    try {
+        await pool.query(`DELETE FROM drinkIngredient WHERE drinkID = ?`, [drinkID]);
+        if (ingredients.length > 0) {
+            const values = ingredients.map(i => [drinkID, i.ingredientID, i.quantityRequired]);
+            await pool.query(
+                `INSERT INTO drinkIngredient (drinkID, ingredientID, quantityRequired) VALUES ?`,
+                [values]
+            );
+        }
+    } catch (error) {
+        console.error('Failed to replace drink ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function replaceFlavoredItemIngredients(flavoredItemID, ingredients) {
+    try {
+        await pool.query(`DELETE FROM flavoredItemIngredient WHERE flavoredItemID = ?`, [flavoredItemID]);
+        if (ingredients.length > 0) {
+            const values = ingredients.map(i => [flavoredItemID, i.ingredientID, i.quantityRequired]);
+            await pool.query(
+                `INSERT INTO flavoredItemIngredient (flavoredItemID, ingredientID, quantityRequired) VALUES ?`,
+                [values]
+            );
+        }
+    } catch (error) {
+        console.error('Failed to replace flavored item ingredients: ', error);
+        throw error;
+    }
+}
+
 export default pool;

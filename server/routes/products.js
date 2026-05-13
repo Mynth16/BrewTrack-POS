@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getProductMenu, getProductVariants, getAvailableAddOns, getProductCategories } from '../db.js';
+import { getProductMenu, getProductVariants, getAvailableAddOns, getProductCategories, addProduct, addSimpleProduct, addProductIngredients, addProductAddOns, addDrink, addDrinkIngredients, addFlavoredItem, addFlavoredItemIngredients, getProductByID, getSimpleProductByProductID, getProductIngredientsbyProductID, getProductAddOnsByProductID, getDrinkIngredientsByProductID, getFlavoredItemIngredientsByProductID, updateProductBase, updateSimpleProductPrice, replaceProductIngredients, replaceProductAddOns, replaceDrinkIngredients, replaceFlavoredItemIngredients} from '../db.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -239,6 +239,161 @@ router.get('/images/:category', (req, res) => {
             error: 'Failed to fetch images',
             message: error.message,
         });
+    }
+});
+
+router.post('/', async (req, res) => {
+    const { productName, category, productType, price, ingredients, addOns, priceAndSize, drinkIngredients, flavors, flavorIngredients } = req.body;
+
+    try {
+        const productID = await addProduct(productName, productType, category, null);
+
+        if (productType === 'simpleProduct') {
+            await addSimpleProduct(productID, price);
+
+            const validIngredients = ingredients.filter(i => i.ingredientID !== '' && i.quantityRequired !== '');
+            if (validIngredients.length > 0) {
+                await addProductIngredients(productID, validIngredients);
+            }
+
+        } else if (productType === 'drink') {
+            const validSizes = priceAndSize.filter(s => s.size !== '' && s.price !== '');
+            for (const sizeRow of validSizes) {
+                const drinkID = await addDrink(productID, sizeRow.size, sizeRow.price);
+
+                const validIngredients = drinkIngredients
+                    .filter(i => i.ingredientID !== '' && i.quantities?.[sizeRow.size])
+                    .map(i => ({
+                        ingredientID: Number(i.ingredientID),
+                        quantityRequired: Number(i.quantities[sizeRow.size])
+                    }));
+
+                if (validIngredients.length > 0) {
+                    await addDrinkIngredients(drinkID, validIngredients);
+                }
+            }
+        } else if (productType === 'flavoredItem') {
+            const validFlavors = flavors.filter(f => f.flavorName !== '' && f.price !== '');
+            for (const flavorRow of validFlavors) {
+                const flavoredItemID = await addFlavoredItem(productID, flavorRow.flavorName, flavorRow.price);
+
+                const validIngredients = flavorIngredients
+                    .filter(i => i.ingredientID !== '' && i.quantities?.[flavorRow.flavorName])
+                    .map(i => ({
+                        ingredientID: Number(i.ingredientID),
+                        quantityRequired: Number(i.quantities[flavorRow.flavorName])
+                    }));
+
+                if (validIngredients.length > 0) {
+                    await addFlavoredItemIngredients(flavoredItemID, validIngredients);
+                }
+            }
+        }
+
+        // Add-ons apply to all product types
+        const validAddOns = addOns.filter(a => a.addOnID !== '' && a.quantityRequired !== '');
+        if (validAddOns.length > 0) {
+            await addProductAddOns(productID, validAddOns);
+        }
+
+        res.status(201).json({ success: true, productID });
+    } catch (error) {
+        console.error('Failed to add product: ', error);
+        res.status(500).json({ success: false, error: 'Failed to add product' });
+    }
+});
+
+router.get('/:productId', async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const product = await getProductByID(productId);
+        if (!product) return res.status(404).json({ success: false, error: 'Product not found' });
+
+        const addOns = await getProductAddOnsByProductID(productId);
+        let typeData = {};
+
+        if (product.productType === 'simpleProduct') {
+            const simple = await getSimpleProductByProductID(productId);
+            const ingredients = await getProductIngredientsbyProductID(productId);
+            typeData = { price: simple?.price, ingredients };
+
+        } else if (product.productType === 'drink') {
+            const rows = await getDrinkIngredientsByProductID(productId);
+            const sizesMap = {};
+            for (const row of rows) {
+                if (!sizesMap[row.size]) {
+                    sizesMap[row.size] = { drinkID: row.drinkID, size: row.size, price: row.price, ingredients: [] };
+                }
+                if (row.ingredientID) {
+                    sizesMap[row.size].ingredients.push({
+                        ingredientID: row.ingredientID,
+                        ingredientName: row.ingredientName,
+                        quantityRequired: row.quantityRequired
+                    });
+                }
+            }
+            typeData = { sizes: Object.values(sizesMap) };
+
+        } else if (product.productType === 'flavoredItem') {
+            const rows = await getFlavoredItemIngredientsByProductID(productId);
+            const flavorsMap = {};
+            for (const row of rows) {
+                if (!flavorsMap[row.flavorName]) {
+                    flavorsMap[row.flavorName] = { flavoredItemID: row.flavoredItemID, flavorName: row.flavorName, price: row.price, ingredients: [] };
+                }
+                if (row.ingredientID) {
+                    flavorsMap[row.flavorName].ingredients.push({
+                        ingredientID: row.ingredientID,
+                        ingredientName: row.ingredientName,
+                        quantityRequired: row.quantityRequired
+                    });
+                }
+            }
+            typeData = { flavors: Object.values(flavorsMap) };
+        }
+
+        res.json({ success: true, data: { ...product, ...typeData, addOns } });
+    } catch (error) {
+        console.error('Error fetching product: ', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch product' });
+    }
+});
+
+router.put('/:productId', async (req, res) => {
+    const { productId } = req.params;
+    const { productName, category, imageURL, price, ingredients, addOns, sizes, flavors } = req.body;
+
+    try {
+        await updateProductBase(productId, productName, category, imageURL);
+
+        if (price !== undefined) {
+            await updateSimpleProductPrice(productId, price);
+        }
+
+        if (ingredients) {
+            await replaceProductIngredients(productId, ingredients);
+        }
+
+        if (sizes) {
+            for (const size of sizes) {
+                await replaceDrinkIngredients(size.drinkID, size.ingredients);
+            }
+        }
+
+        if (flavors) {
+            for (const flavor of flavors) {
+                await replaceFlavoredItemIngredients(flavor.flavoredItemID, flavor.ingredients);
+            }
+        }
+
+        if (addOns) {
+            await replaceProductAddOns(productId, addOns);
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Failed to update product: ', error);
+        res.status(500).json({ success: false, error: 'Failed to update product' });
     }
 });
 

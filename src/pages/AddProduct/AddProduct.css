@@ -25,6 +25,62 @@ Might rename again later if needed.
     padding-bottom: 15px;
 }
 
+.form-question select {
+    box-sizing: border-box;
+
+    border-radius: 6px;
+    border: transparent;
+}
+
+.form-answer {
+    display: flex;
+    width: 40%;
+
+    gap: 12px;
+}
+
+.form-answer input, .form-answer select{
+    flex: 2;
+}
+
+.form-answer button {
+    flex: 1;
+    min-width: 0;
+}
+
+.size-row {
+    display: flex;
+    width: 40%;
+
+    gap: 10px;
+}
+
+.size-row input {
+    flex: 1;
+}
+
+.form-question input {
+    width: 40%;
+}
+
+.add-product-form-wrapper form {
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+}
+
+.addproduct-addon-row {
+    display: flex;
+    width: 40%;
+
+    gap: 12px;
+}
+
+.addproduct-addon-row input, .addproduct-addon-row select {
+    flex: 1;
+}
+
 .add-product-ingredient-buttons {
     display: flex;
     flex-direction: row;
@@ -35,12 +91,28 @@ Might rename again later if needed.
     padding: 8px;
 }
 
+.add-product-add-ingredient {
+    background: linear-gradient(to top, #43341F, #A9834E);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    padding: 4px;
+    align-self: center;
+}
+
+.more-questions-container {
+    display: flex;
+    flex-direction: column;
+}
+
 /*FOR THE ADD PRODUCTS VIEW*/
 
 .add-product-form-wrapper {
     display: flex;
     flex-direction: column;
-    min-width: 50%;
+    min-width: 756.68px;
+    max-height: 400px;
+    overflow-y: auto;
     
     color: white;
     border-radius: 12px;
@@ -48,6 +120,56 @@ Might rename again later if needed.
     border: 1px solid black;
     background: linear-gradient(to top, #000000, #43341F);
 }
+
+.ingredientsLabel {
+    text-align: center;
+    padding: 8px 0 4px 0;
+}
+
+.addAddOnButton {
+    background: linear-gradient(to top, #43341F, #A9834E);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding: 4px;
+    width: 20%;
+    align-self: center;
+}
+
+.drink-ingredient-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.drink-ingredient-row select {
+    width: 180px;
+    flex: 0 0 180px;
+}
+
+.drink-ingredient-row input {
+    width: 120px;
+    flex: 0 0 120px;
+}
+
+.ingredient-select-spacer {
+    width: 180px;
+    flex: 0 0 180px;
+}
+
+.ingredient-button-spacer {
+    width: 40px;
+    flex: 0 0 40px;
+}
+
+.remove-row-ingredients {
+    width: 40px;
+    flex: 0 0 40px;
+}
+
 
 /*FOR THE ADD INGREDIENTS VIEW*/
 .add-ingredient-form-wrapper{
