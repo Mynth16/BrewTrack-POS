@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 import Navigation from '../../components/Navigation/Navigation';
+import { useAuth } from '../../context/AuthContext';
 import './UserManager.css';
 
 export default function UserManager() {
@@ -30,6 +31,7 @@ export default function UserManager() {
   });
 
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   // Fetch all active users on component mount
   useEffect(() => {
@@ -267,7 +269,7 @@ export default function UserManager() {
         <Navigation />
       <div className="user-manager-header">
         <h1>User Manager</h1>
-        <button className="btn-add-user" onClick={handleAddUser}>
+        <button className="btn-add-user" onClick={handleAddUser} disabled={currentUser?.role === 'Cashier'}>
           Add User
         </button>
       </div>
@@ -308,12 +310,14 @@ export default function UserManager() {
                     <button
                       className="btn-edit"
                       onClick={() => handleEditUser(user)}
+                      disabled={currentUser?.role === 'Cashier'}
                     >
                       Edit User
                     </button>
                     <button
                       className="btn-delete"
                       onClick={() => handleDeleteUser(user)}
+                      disabled={currentUser?.role === 'Cashier'}
                     >
                       Deactivate
                     </button>
