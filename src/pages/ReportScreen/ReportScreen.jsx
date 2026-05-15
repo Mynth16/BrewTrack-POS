@@ -26,7 +26,7 @@ function ReportScreen() {
             try {
                 console.log('Token:', token);
                 console.log('Fetching initial data...');
-                const cashierData = await userService.getCashiers(token);
+                const cashierData = await userService.getAllUsers(token);
                 console.log('Cashiers raw response:', cashierData);
                 
                 const productData = await productService.getProducts();
@@ -84,11 +84,9 @@ function ReportScreen() {
         <div className="report-screen-wrapper">
             <Navigation />
             <div className="report-screen">
-                <h1>Reports</h1>
-                <div className="debug-info">
-                    <small>Available: {cashiers.length} cashiers | {products.length} products | {orders.length} orders</small>
-                </div>
-            <div className="filters-container">
+                <div className="report-header">
+                    <h1>Reports</h1>
+                    <div className="filters-container">
                 <div className="filter-item">
                     <label>From:</label>
                     <input 
@@ -120,7 +118,7 @@ function ReportScreen() {
                         <option value="">All</option>
                         {cashiers.map(c => (
                             <option key={c.accountID} value={c.accountID}>
-                                {c.cashierName}
+                                {c.firstName} {c.lastName}
                             </option>
                         ))}
                     </select>
@@ -142,6 +140,7 @@ function ReportScreen() {
                     </select>
                 </div>
             </div>
+                </div>
 
             {error && (
                 <div className="error-message">
@@ -172,7 +171,7 @@ function ReportScreen() {
                                         <td className="items-cell">
                                             {order.items && order.items.map(item => (
                                                 <div key={item.orderItemID} className="item-row">
-                                                    <span className="item-name">{item.productName} x{item.quantity}</span>
+                                                    <span>{item.productName} x{item.quantity}</span>
                                                     {item.addOns && item.addOns.length > 0 && (
                                                         <ul className="addons-list">
                                                             {item.addOns.map((ao, idx) => (

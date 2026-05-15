@@ -180,4 +180,25 @@ export const userService = {
             throw error;
         }
     },
+
+    // Fetch all active users/accounts
+    async getAllUsers(token) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch users: ${response.statusText}`);
+            }
+
+            const { data } = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            throw error;
+        }
+    },
 };

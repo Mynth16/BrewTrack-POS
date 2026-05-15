@@ -1,3 +1,17 @@
+/* Color Scheme */
+:root {
+  --primary-brown: #4A3728;
+  --secondary-brown: #6B5344;
+  --light-brown: #8B7355;
+  --cream-bg: #F5EFE7;
+  --text-dark: #2C1810;
+  --text-light: #FFFFFF;
+  --accent-green: #7CB342;
+  --accent-gold: #D4A574;
+  --border-color: #D4C5B9;
+  --danger: #D32F2F;
+}
+
 .report-screen-wrapper {
     min-height: 100vh;
     display: flex;
@@ -7,36 +21,49 @@
 
 .report-screen {
     padding: 2rem;
-    background-color: #f4f1ea;
+    background-color: var(--cream-bg);
     flex: 1;
 }
 
 .report-screen h1 {
     font-size: 2.5rem;
     font-weight: bold;
-    margin-bottom: 2rem;
-    color: #3a2d25;
+    color: var(--primary-brown);
+    margin: 0;
+    white-space: nowrap;
 }
 
-.debug-info {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    background-color: #f0f0f0;
-    border-radius: 4px;
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--secondary-brown);
+    width: 90vw;
+    margin-left: calc(-50vw + 55%);
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.report-header .filters-container {
+    margin-bottom: 0;
+    padding: 0;
+    background-color: transparent;
+    box-shadow: none;
+    border-radius: 0;
 }
 
 .filters-container {
     display: flex;
     gap: 1.5rem;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 0;
+    background-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
     align-items: flex-end;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .filter-item {
@@ -48,17 +75,18 @@
 .filter-item label {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #5c4b42;
+    color: var(--text-dark);
+    font-weight: bold;
 }
 
 .filter-input,
 .filter-select {
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 0.95rem;
-    background-color: #fff;
-    color: #333;
+    background-color: var(--cream-bg);
+    color: var(--text-dark);
     cursor: pointer;
     transition: border-color 0.2s;
 }
@@ -66,12 +94,12 @@
 .filter-input:focus,
 .filter-select:focus {
     outline: none;
-    border-color: #8b7355;
+    border-color: var(--light-brown);
 }
 
 .report-table-container {
-    background-color: #3a2d25;
-    color: #f4f1ea;
+    background-color: var(--primary-brown);
+    color: var(--text-light);
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -79,7 +107,7 @@
 }
 
 .report-table {
-    width: 100%;
+    width: 98%;
     border-collapse: collapse;
 }
 
@@ -87,19 +115,28 @@
 .report-table td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid #5c4b42;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .report-table th {
     font-weight: bold;
     font-size: 1rem;
-    background-color: #2f261f;
+    background-color: var(--secondary-brown);
     position: sticky;
     top: 0;
 }
 
+.report-table tbody tr:nth-child(odd) {
+    background-color: var(--primary-brown);
+}
+
+.report-table tbody tr:nth-child(even) {
+    background-color: var(--secondary-brown);
+}
+
 .report-table tbody tr:hover {
-    background-color: rgba(92, 75, 66, 0.5);
+    background-color: var(--light-brown);
+    transition: background-color 0.2s ease;
 }
 
 .items-cell {
@@ -109,11 +146,6 @@
 
 .item-row {
     margin-bottom: 0.5rem;
-}
-
-.item-name {
-    display: block;
-    font-weight: 500;
 }
 
 .addons-list {
@@ -147,7 +179,7 @@
 
 .error-message {
     background-color: #f8d7da;
-    color: #721c24;
+    color: var(--danger);
     padding: 1rem 1.5rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -156,8 +188,14 @@
 
 /* Responsive design */
 @media (max-width: 1024px) {
+    .report-header {
+        flex-wrap: wrap;
+    }
+
     .filters-container {
         gap: 1rem;
+        flex-wrap: wrap;
+        width: 100%;
     }
 
     .filter-item {
@@ -171,15 +209,24 @@
         padding: 1rem;
     }
 
-    .report-screen h1 {
+    .report-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-left: calc(-50vw + 50%);
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .report-header h1 {
         font-size: 1.8rem;
-        margin-bottom: 1rem;
+        width: 100%;
     }
 
     .filters-container {
         flex-direction: column;
         gap: 1rem;
-        padding: 1rem;
+        width: 100%;
     }
 
     .filter-item {
