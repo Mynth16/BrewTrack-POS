@@ -8,6 +8,7 @@ import {
     getOrderHistory,
     finalizeOrder,
     getVariantIdBySize,
+    getFilteredOrders,
 } from '../db.js';
 
 const router = express.Router();
@@ -38,6 +39,16 @@ function authMiddleware(req, res, next) {
  * Create a new order (status: pending)
  * Body: { discountPercent: number }
  */
+router.get('/', authMiddleware, async (req, res) => {
+    try {
+        const orders = await getFilteredOrders(req.query);
+        res.status(200).json({ success: true, data: orders });
+    } catch (error) {
+        console.error('Error fetching filtered orders:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error', details: error.message });
+    }
+});
+
 router.post('/', authMiddleware, async (req, res) => {
     try {
         const { discountPercent = 0 } = req.body;
