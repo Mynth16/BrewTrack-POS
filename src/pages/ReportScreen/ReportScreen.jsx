@@ -5,9 +5,12 @@ import { orderService, userService, productService } from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 import './ReportScreen.css';
 
+const ITEMS_PER_PAGE = 10;
+
 function ReportScreen() {
     const { token } = useAuth();
     const [orders, setOrders] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
         startDate: '',
         endDate: '',
@@ -29,7 +32,7 @@ function ReportScreen() {
                 const cashierData = await userService.getAllUsers(token);
                 console.log('Cashiers raw response:', cashierData);
                 
-                const productData = await productService.getProducts();
+                const productData = (await productService.getProducts())?.products || [];
                 console.log('Products raw response:', productData);
                 
                 setCashiers(Array.isArray(cashierData) ? cashierData : []);
@@ -74,6 +77,21 @@ function ReportScreen() {
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
+        setCurrentPage(1); // Reset to page 1 when filters change
+    };
+
+    // Calculate pagination values
+    const totalPages = Math.ceil(orders.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedOrders = orders.slice(startIndex, endIndex);
+
+    const handlePreviousPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages));
     };
 
     const formatDateTime = (dateTime) => {
@@ -164,7 +182,7 @@ function ReportScreen() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {orders.map(order => (
+                                {paginatedOrders.map(order => (
                                     <tr key={order.orderID}>
                                         <td>{formatDateTime(order.dateAndTime)}</td>
                                         <td>{order.cashierName}</td>
@@ -190,6 +208,28 @@ function ReportScreen() {
                         </table>
                     ) : (
                         <div className="no-data">No orders found for the selected filters.</div>
+                    )}
+                    {orders.length > 0 && (
+                        <div className="pagination-controls">
+                            <button 
+                                className="pagination-btn"
+                                onClick={handlePreviousPage}
+                                disabled={currentPage === 1}
+                            >
+                                ← Previous
+                            </button>
+                            <div className="pagination-info">
+                                <span className="page-indicator">Page {currentPage} of {totalPages}</span>
+                                <span className="items-indicator">Showing {startIndex + 1}-{Math.min(endIndex, orders.length)} of {orders.length} orders</span>
+                            </div>
+                            <button 
+                                className="pagination-btn"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next →
+                            </button>
+                        </div>
                     )}
                 </div>
             )}

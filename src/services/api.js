@@ -14,8 +14,7 @@ export const productService = {
             }
             const { data } = await response.json();
             // data contains { categories, products, addOns }
-            // Return just the products array for reports
-            return data.products || [];
+            return data;
         } catch (error) {
             console.error('Error fetching products:', error);
             throw error;
