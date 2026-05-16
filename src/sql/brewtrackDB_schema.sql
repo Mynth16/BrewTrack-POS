@@ -179,6 +179,22 @@ CREATE TABLE flavoredItemIngredient (
     UNIQUE KEY unique_flavored_ingredient (flavoredItemID, ingredientID)
 );
 
+-- NEW TABLEs
+CREATE TABLE restockTemplate (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    tempName VARCHAR(150) NOT NULL,
+    `desc` TEXT NULL
+);
+
+CREATE TABLE restockTemplateList (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    restockTemplateID INT NOT NULL,
+    ingID INT NOT NULL,
+    qty DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (restockTemplateID) REFERENCES restockTemplate(id) ON DELETE CASCADE,
+    FOREIGN KEY (ingID) REFERENCES ingredient(ingredientID) ON DELETE CASCADE
+);
+
 -- INDEXES FOR PERFORMANCE
 CREATE INDEX idx_product_type      ON product(productType);
 CREATE INDEX idx_product_category  ON product(category);
