@@ -383,11 +383,22 @@ export async function getOrderHistory(orderId) {
 }
 
 export async function finalizeOrder(orderId, paymentMethod) {
+    const conn = await pool.getConnection();
     try {
+        await conn.beginTransaction();
         const query = `UPDATE orders SET paymentMethod = ?, status = 'completed' WHERE orderID = ?`;
         const [result] = await pool.query(query, [paymentMethod, orderId]);
         return result.affectedRows > 0;
+
+        if (result.affectedRows === 0) {
+            await conn.rollback();
+            return false;
+        }
+
+        await conn.commit();
+        return true;
     } catch (error) {
+        await conn.rollback();
         console.error('Error finalizing order:', error);
         throw error;
     }
@@ -748,6 +759,224 @@ export async function replaceFlavoredItemIngredients(flavoredItemID, ingredients
         }
     } catch (error) {
         console.error('Failed to replace flavored item ingredients: ', error);
+        throw error;
+    }
+}
+
+export async function getProductIngredientsWithStockByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT pi.quantityRequired, i.stockQuantity
+             FROM productIngredient pi
+             JOIN ingredient i ON pi.ingredientID = i.ingredientID
+             WHERE pi.productID = ?`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get product ingredients with stock: ', error);
+        throw error;
+    }
+}
+
+export async function getDrinkIngredientsWithStockByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT d.drinkID, d.size, di.ingredientID, di.quantityRequired, i.stockQuantity
+             FROM drink d
+             LEFT JOIN drinkIngredient di ON d.drinkID = di.drinkID
+             LEFT JOIN ingredient i ON di.ingredientID = i.ingredientID
+             WHERE d.productID = ?
+             ORDER BY d.drinkID`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get drink ingredients with stock: ', error);
+        throw error;
+    }
+}
+
+export async function getFlavoredItemIngredientsWithStockByProductID(productID) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT fi.flavoredItemID, fi.flavorName, fii.ingredientID, fii.quantityRequired, i.stockQuantity
+             FROM flavoredItem fi
+             LEFT JOIN flavoredItemIngredient fii ON fi.flavoredItemID = fii.flavoredItemID
+             LEFT JOIN ingredient i ON fii.ingredientID = i.ingredientID
+             WHERE fi.productID = ?
+             ORDER BY fi.flavoredItemID`,
+            [productID]
+        );
+        return rows;
+    } catch (error) {
+        console.error('Failed to get flavored item ingredients with stock: ', error);
+        throw error;
+    }
+}
+
+export async function addAddOn(ingredientID, addOnName, addOnPrice) {
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO addOn (ingredientID, addOnName, addOnPrice) VALUES (?, ?, ?)',
+            [ingredientID, addOnName, addOnPrice]
+        );
+        return { addOnID: result.insertId, ingredientID, addOnName, addOnPrice };
+    } catch (error) {
+        console.error('Database query error:', error);
+        throw error;
+    }
+}
+
+export async function addRestockTemplate(tempName, description = null, items = []) {
+  const [result] = await pool.query(
+    'INSERT INTO restockTemplate (tempName, `desc`) VALUES (?, ?)',
+    [tempName, description]
+  );
+
+  const templateID = result.insertId;
+
+  if (items.length > 0) {
+    const values = items.map(item => [templateID, item.ingredientID, item.quantityToAdd]);
+    await pool.query(
+      'INSERT INTO restockTemplateList (restockTemplateID, ingID, qty) VALUES ?',
+      [values]
+    );
+  }
+
+  return { templateID, templateName: tempName, description, items };
+}
+
+export async function getRestockTemplates() {
+  const [templates] = await pool.query(
+    'SELECT id AS templateID, tempName AS templateName, `desc` AS description FROM restockTemplate ORDER BY id DESC'
+  );
+
+  if (!templates.length) return [];
+
+  const templateIds = templates.map(t => t.templateID);
+  const [rows] = await pool.query(
+    'SELECT id, restockTemplateID, ingID, qty FROM restockTemplateList WHERE restockTemplateID IN (?)',
+    [templateIds]
+  );
+
+  return templates.map(template => ({
+    ...template,
+    items: rows
+      .filter(row => row.restockTemplateID === template.templateID)
+      .map(row => ({
+        id: row.id,
+        ingredientID: row.ingID,
+        quantityToAdd: Number(row.qty),
+      }))
+  }));
+}
+
+export async function getRestockTemplateById(templateID) {
+  const [templates] = await pool.query(
+    'SELECT id AS templateID, tempName AS templateName, `desc` AS description FROM restockTemplate WHERE id = ?',
+    [templateID]
+  );
+  const template = templates[0];
+  if (!template) return null;
+
+  const [rows] = await pool.query(
+    'SELECT id, restockTemplateID, ingID, qty FROM restockTemplateList WHERE restockTemplateID = ?',
+    [templateID]
+  );
+
+  return {
+    ...template,
+    items: rows.map(row => ({
+      id: row.id,
+      ingredientID: row.ingID,
+      quantityToAdd: Number(row.qty),
+    })),
+  };
+}
+
+export async function updateRestockTemplate(templateID, tempName, description = null, items = []) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    await conn.query(
+      'UPDATE restockTemplate SET tempName = ?, `desc` = ? WHERE id = ?',
+      [tempName, description, templateID]
+    );
+
+    await conn.query(
+      'DELETE FROM restockTemplateList WHERE restockTemplateID = ?',
+      [templateID]
+    );
+
+    if (items.length > 0) {
+      const values = items.map(item => [templateID, item.ingredientID, item.quantityToAdd]);
+      await conn.query(
+        'INSERT INTO restockTemplateList (restockTemplateID, ingID, qty) VALUES ?',
+        [values]
+      );
+    }
+
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
+}
+
+export async function deleteRestockTemplate(templateID) {
+  await pool.query('DELETE FROM restockTemplate WHERE id = ?', [templateID]);
+}
+
+export async function applyRestock(items = []) {
+  if (!Array.isArray(items) || items.length === 0) throw new Error('No items provided');
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    for (const it of items) {
+      await conn.query(
+        'UPDATE ingredient SET stockQuantity = stockQuantity + ? WHERE ingredientID = ?',
+        [it.quantityAdded, it.ingredientID]
+      );
+    }
+
+    await conn.commit();
+    return { success: true };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+export async function updateDrinkVariant(drinkID, size, price) {
+    try {
+        const [result] = await pool.query(
+            `UPDATE drink SET size = ?, price = ? WHERE drinkID = ?`,
+            [size, price, drinkID]
+        );
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Failed to update drink variant:', error);
+        throw error;
+    }
+}
+
+export async function updateFlavoredItemVariant(flavoredItemID, flavorName, price) {
+    try {
+        const [result] = await pool.query(
+            `UPDATE flavoredItem SET flavorName = ?, price = ? WHERE flavoredItemID = ?`,
+            [flavorName, price, flavoredItemID]
+        );
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Failed to update flavored item variant:', error);
         throw error;
     }
 }

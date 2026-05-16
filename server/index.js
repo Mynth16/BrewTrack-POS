@@ -7,6 +7,7 @@ import productsRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import addOnRoutes from './routes/addOn.js';
 import usersRoutes from './routes/users.js';
+import restockRoutes from './routes/restock.js';
 dotenv.config();
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/ingredients', ingredientsRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/addons', addOnRoutes);
+app.use('/api/restock', restockRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

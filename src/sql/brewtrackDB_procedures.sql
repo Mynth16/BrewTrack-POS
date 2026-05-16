@@ -554,4 +554,87 @@ BEGIN
     END IF;
 END$$
 
+-- for the dedcut ingredients
+CREATE PROCEDURE sp_AddOrderItem(
+  IN p_orderID      INT,
+  IN p_productID    INT,
+  IN p_variantID    INT,
+  IN p_quantity     INT,
+  IN p_priceAtTime  DECIMAL(10, 2)
+)
+MODIFIES SQL DATA
+BEGIN
+  DECLARE v_orderItemID  INT;
+  DECLARE v_productType  VARCHAR(20);
+  DECLARE v_lineTotal    DECIMAL(10, 2);
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SELECT NULL as orderItemID;
+  END;
+
+  START TRANSACTION;
+
+  IF p_orderID IS NULL OR p_orderID <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid orderID';
+  END IF;
+
+  IF p_productID IS NULL OR p_productID <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid productID';
+  END IF;
+
+  IF p_quantity IS NULL OR p_quantity <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid quantity';
+  END IF;
+
+  SELECT productType INTO v_productType
+  FROM product WHERE productID = p_productID;
+
+  IF v_productType IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Product not found';
+  END IF;
+
+  SET v_lineTotal = p_priceAtTime * p_quantity;
+
+  INSERT INTO orderItem (orderID, productID, productPriceAtTime, lineTotal, productQuantity)
+  VALUES (p_orderID, p_productID, p_priceAtTime, v_lineTotal, p_quantity);
+
+  SET v_orderItemID = LAST_INSERT_ID();
+
+  IF v_productType = 'drink' THEN
+    INSERT INTO orderItemDrink (orderItemID, drinkID)
+    VALUES (v_orderItemID, p_variantID);
+
+    -- Deduct using drinkIngredient, keyed on the specific drinkID (size)
+    UPDATE ingredient i
+    JOIN drinkIngredient di ON di.ingredientID = i.ingredientID
+    SET i.stockQuantity = i.stockQuantity - (di.quantityRequired * p_quantity)
+    WHERE di.drinkID = p_variantID;
+
+  ELSEIF v_productType = 'flavoredItem' THEN
+    INSERT INTO orderItemFlavoredItem (orderItemID, flavoredItemID)
+    VALUES (v_orderItemID, p_variantID);
+
+    -- Deduct using flavoredItemIngredient, keyed on the specific flavoredItemID
+    UPDATE ingredient i
+    JOIN flavoredItemIngredient fii ON fii.ingredientID = i.ingredientID
+    SET i.stockQuantity = i.stockQuantity - (fii.quantityRequired * p_quantity)
+    WHERE fii.flavoredItemID = p_variantID;
+
+  ELSEIF v_productType = 'simpleProduct' THEN
+    INSERT INTO orderItemSimpleProduct (orderItemID, simpleProductID)
+    VALUES (v_orderItemID, p_variantID);
+
+    -- Deduct using productIngredient, keyed on productID
+    UPDATE ingredient i
+    JOIN productIngredient pi ON pi.ingredientID = i.ingredientID
+    SET i.stockQuantity = i.stockQuantity - (pi.quantityRequired * p_quantity)
+    WHERE pi.productID = p_productID;
+  END IF;
+
+  COMMIT;
+  SELECT v_orderItemID as orderItemID;
+END$$
+
 DELIMITER ;

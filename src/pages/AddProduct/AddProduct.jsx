@@ -11,6 +11,8 @@ function AddProduct() {
     const [categories, setCategories] = useState([]);
     const [ingredientList, setIngredientList] = useState([]);
     const [addOnsList, setAddOnsList] = useState([]);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
     const [formError, setFormError] = useState(null);
 
     // CONDITIONS BEFORE SUBMITTING
@@ -76,6 +78,21 @@ function AddProduct() {
             prev => prev === 'product' ? 'ingredient' : 'product'
         );
     }
+
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => setImagePreview(e.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        setImagePreview('');
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -188,10 +205,10 @@ function AddProduct() {
         );
     };
 
-    const handleSubmitProduct = async (event) => {
-        event.preventDefault();
+const handleSubmitProduct = async (event) => {
+    event.preventDefault();
 
-        const error = validateProduct();
+    const error = validateProduct();
         if (error) {
             setFormError(error);
             return;
@@ -222,11 +239,10 @@ function AddProduct() {
                         quantities: i.quantities
                     })),
 
-                //flavoreed fields
+                //flavored fields
                 flavors: productForm.flavors.filter(f => f.flavorName !== '' && f.price !== ''),
                 flavorIngredients: productForm.flavorIngredients
-                    .filter(i => i.ingredientID !== '')
-                    .map(i => ({
+                    .filter(i => i.ingredientID !== '').map(i => ({
                         ingredientID: Number(i.ingredientID),
                         quantities: i.quantities
                     })),
@@ -243,9 +259,32 @@ function AddProduct() {
                 throw new Error(errorData.error || 'Failed to add product.');
             }
 
+            // Get productID from response
+            const responseData = await response.json();
+            const productID = responseData.productID;
+
+            // Upload image if selected
+            if (selectedImage && productID) {
+                const formData = new FormData();
+                formData.append('image', selectedImage);
+                formData.append('category', productForm.category);
+
+                const uploadRes = await fetch(`/api/products/${productID}/image`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!uploadRes.ok) {
+                    console.warn('Image upload failed, but product was created');
+                }
+            }
+
+            setSelectedImage(null);
+            setImagePreview('');
             navigate('/inventory');
         } catch (error) {
             console.error(error);
+            setFormError(error.message);
         }
     };
 
@@ -460,7 +499,30 @@ function AddProduct() {
                         </div>
                         <div className = "form-question">
                             <label>Select Image: </label>
-                        </div>  
+                            <div className = "form-answer">
+                                <input 
+                                    type = "file"
+                                    accept = "image/*"
+                                    onChange = {handleImageChange}
+                                />
+                                {imagePreview && (
+                                    <div>
+                                        <img
+                                            src = {imagePreview}
+                                            alt = "Product Preview"
+                                            style = {{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
+                                        />
+                                        <button 
+                                            type = "button" 
+                                            onClick = {handleRemoveImage}
+                                            style = {{ marginLeft: '10px', padding: '5px 10px', backgroundColor: '#ff6b6b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        >
+                                            Remove Image
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                         <button type="button" className = "addAddOnButton" onClick={handleAddAddOnRow}>Add Add-On</button>
                         {productForm.addOns.map((row, index) => (
                         <div className = "form-question">

@@ -1,0 +1,125 @@
+.add-addon-container {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.add-addon-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-width: 756.68px;
+    max-height: 500px;
+    overflow-y: auto;
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid black;
+    background: linear-gradient(to top, #000000, #43341F);
+}
+
+.form-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+}
+
+.form-header h2 {
+    margin: 0;
+    color: white;
+}
+
+.back-button {
+    padding: 8px 16px;
+    background: linear-gradient(to top, #43341F, #A9834E);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.back-button:hover {
+    opacity: 0.9;
+}
+
+.form-question {
+    margin-bottom: 20px;
+}
+
+.form-question label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: white;
+}
+
+.form-answer {
+    display: flex;
+    width: 40%;
+    gap: 12px;
+}
+
+.form-answer input,
+.form-answer select {
+    flex: 2;
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: transparent;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    box-sizing: border-box;
+}
+
+.form-answer input::placeholder,
+.form-answer select {
+    color: #ddd;
+}
+
+.form-answer input:focus,
+.form-answer select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.add-addon-button {
+    background: linear-gradient(to top, #43341F, #A9834E);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding: 12px;
+    width: 20%;
+    align-self: center;
+    cursor: pointer;
+}
+
+.add-addon-button:hover:not(:disabled) {
+    opacity: 0.95;
+}
+
+.add-addon-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    .add-addon-form-wrapper {
+        min-width: auto;
+        width: 90%;
+    }
+
+    .form-answer,
+    .form-question input,
+    .form-question select {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .add-addon-button {
+        width: 100%;
+    }
+}

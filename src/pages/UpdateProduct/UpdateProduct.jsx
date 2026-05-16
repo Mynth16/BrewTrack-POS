@@ -11,6 +11,9 @@ function UpdateProduct() {
     const [ingredientList, setIngredientList] = useState([]);
     const [addOnsList, setAddOnsList] = useState([]);
     const [formError, setFormError] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
+    const [imageRemoved, setImageRemoved] = useState(false);
 
     const [productForm, setProductForm] = useState({
         productName: '',
@@ -24,9 +27,11 @@ function UpdateProduct() {
 
         // drink
         sizes: [],
+        drinkIngredients: [{ ingredientID: '', quantities: {} }],
 
         // flavoredItem
         flavors: [],
+        flavorIngredients: [{ ingredientID: '', quantities: {}}],
         
         // all
         addOns: [{ addOnID: '', quantityRequired: '' }],
@@ -53,6 +58,55 @@ function UpdateProduct() {
 
                 const p = productData.data;
 
+                setImagePreview(p.imageURL || '');
+
+                const buildDrinkIngredients = (sizes) => {
+                    const map = new Map();
+
+                    for (const size of sizes || []) {
+                        for (const ingredient of size.ingredients || []) {
+                            const key = String(ingredient.ingredientID);
+                            const existing = map.get(key);
+                            if (existing) {
+                                existing.quantities[size.size] = String(ingredient.quantityRequired);
+                            } else {
+                                map.set(key, {
+                                    ingredientID: String(ingredient.ingredientID),
+                                    quantities: { [size.size]: String(ingredient.quantityRequired) },
+                                });
+                            }
+                        }
+                    }
+
+                    return map.size > 0
+                        ? Array.from(map.values())
+                        : [{ ingredientID: '', quantities: {} }];
+                };
+
+                const buildVariantIngredients = (variants, idKey) => {
+                    const map = new Map();
+
+                    for (const variant of variants || []) {
+                        for (const ingredient of variant.ingredients || []) {
+                            const ingredientID = String(ingredient.ingredientID);
+                            const existing = map.get(ingredientID);
+
+                            if (existing) {
+                                existing.quantities[variant[idKey]] = String(ingredient.quantityRequired);
+                            } else {
+                                map.set(ingredientID, {
+                                    ingredientID,
+                                    quantities: { [variant[idKey]]: String(ingredient.quantityRequired) },
+                                });
+                            }
+                        }
+                    }
+
+                    return map.size > 0
+                        ? Array.from(map.values())
+                        : [{ ingredientID: '', quantities: {} }];
+                };
+
                 setProductForm({
                     productName: p.productName,
                     category: p.category,
@@ -66,18 +120,14 @@ function UpdateProduct() {
                         drinkID: s.drinkID,
                         size: s.size,
                         price: s.price,
-                        ingredients: s.ingredients?.length > 0
-                            ? s.ingredients.map(i => ({ ingredientID: String(i.ingredientID), quantityRequired: String(i.quantityRequired) }))
-                            : [{ ingredientID: '', quantityRequired: '' }]
                     })) || [],
+                    drinkIngredients: buildVariantIngredients(p.sizes, 'drinkID'),
                     flavors: p.flavors?.map(f => ({
                         flavoredItemID: f.flavoredItemID,
                         flavorName: f.flavorName,
                         price: f.price,
-                        ingredients: f.ingredients?.length > 0
-                            ? f.ingredients.map(i => ({ ingredientID: String(i.ingredientID), quantityRequired: String(i.quantityRequired) }))
-                            : [{ ingredientID: '', quantityRequired: '' }]
                     })) || [],
+                    flavorIngredients: buildVariantIngredients(p.flavors, 'flavoredItemID'),
                     addOns: p.addOns?.length > 0
                         ? p.addOns.map(a => ({ addOnID: String(a.addOnID), quantityRequired: String(a.quantityRequired) }))
                         : [{ addOnID: '', quantityRequired: '' }],
@@ -93,6 +143,22 @@ function UpdateProduct() {
 
     const handleProductForm = (field) => (event) => {
         setProductForm(prev => ({ ...prev, [field]: event.target.value }));
+    };
+
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => setImagePreview(e.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        setImagePreview('');
+        setImageRemoved(true);
     };
 
     // Simple product ingredient handlers
@@ -118,76 +184,34 @@ function UpdateProduct() {
     };
 
     // Drink ingredient handlers
-    const handleDrinkIngredientChange = (sizeIndex, ingredientIndex, field) => (event) => {
+    const handleDrinkIngredientChange = (index, field) => (event) => {
         setProductForm(prev => ({
             ...prev,
-            sizes: prev.sizes.map((size, si) =>
-                si === sizeIndex ? {
-                    ...size,
-                    ingredients: size.ingredients.map((row, ii) =>
-                        ii === ingredientIndex ? { ...row, [field]: event.target.value } : row
-                    )
-                } : size
+            drinkIngredients: prev.drinkIngredients.map((row, i) =>
+                i === index ? { ...row, [field]: event.target.value } : row
             )
         }));
-    };
-    const handleAddDrinkIngredientRow = (sizeIndex) => {
-        setProductForm(prev => ({
-            ...prev,
-            sizes: prev.sizes.map((size, si) =>
-                si === sizeIndex ? { ...size, ingredients: [...size.ingredients, { ingredientID: '', quantityRequired: '' }] } : size
-            )
-        }));
-    };
-    const handleRemoveDrinkIngredientRow = (sizeIndex, ingredientIndex) => {
-        setProductForm(prev => ({
-            ...prev,
-            sizes: prev.sizes.map((size, si) =>
-                si === sizeIndex ? { ...size, ingredients: size.ingredients.filter((_, ii) => ii !== ingredientIndex) } : size
-            )
-        }));
-    };
-    const getAvailableDrinkIngredients = (sizeIndex, currentIngredientIndex) => {
-        const selectedIDs = productForm.sizes[sizeIndex].ingredients
-            .map((row, i) => i !== currentIngredientIndex ? row.ingredientID : null)
-            .filter(id => id !== null && id !== '');
-        return ingredientList.filter(ing => !selectedIDs.includes(String(ing.ingredientID)));
     };
 
-    // Flavor ingrediente handlers
-    const handleFlavorIngredientChange = (flavorIndex, ingredientIndex, field) => (event) => {
+    const handleAddDrinkIngredientRow = () => {
         setProductForm(prev => ({
             ...prev,
-            flavors: prev.flavors.map((flavor, fi) =>
-                fi === flavorIndex ? {
-                    ...flavor,
-                    ingredients: flavor.ingredients.map((row, ii) =>
-                        ii === ingredientIndex ? { ...row, [field]: event.target.value } : row
-                    )
-                } : flavor
-            )
+            drinkIngredients: [...prev.drinkIngredients, { ingredientID: '', quantities: {} }]
         }));
     };
-    const handleAddFlavorIngredientRow = (flavorIndex) => {
+
+    const handleRemoveDrinkIngredientRow = (index) => {
         setProductForm(prev => ({
             ...prev,
-            flavors: prev.flavors.map((flavor, fi) =>
-                fi === flavorIndex ? { ...flavor, ingredients: [...flavor.ingredients, { ingredientID: '', quantityRequired: '' }] } : flavor
-            )
+            drinkIngredients: prev.drinkIngredients.filter((_, i) => i !== index)
         }));
     };
-    const handleRemoveFlavorIngredientRow = (flavorIndex, ingredientIndex) => {
-        setProductForm(prev => ({
-            ...prev,
-            flavors: prev.flavors.map((flavor, fi) =>
-                fi === flavorIndex ? { ...flavor, ingredients: flavor.ingredients.filter((_, ii) => ii !== ingredientIndex) } : flavor
-            )
-        }));
-    };
-    const getAvailableFlavorIngredients = (flavorIndex, currentIngredientIndex) => {
-        const selectedIDs = productForm.flavors[flavorIndex].ingredients
-            .map((row, i) => i !== currentIngredientIndex ? row.ingredientID : null)
+
+    const getAvailableDrinkIngredients = (currentIndex) => {
+        const selectedIDs = productForm.drinkIngredients
+            .map((row, i) => i !== currentIndex ? row.ingredientID : null)
             .filter(id => id !== null && id !== '');
+
         return ingredientList.filter(ing => !selectedIDs.includes(String(ing.ingredientID)));
     };
 
@@ -215,54 +239,165 @@ function UpdateProduct() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
-        if (!productForm.productName.trim()) return setFormError('Product name is required.');
-        if (!productForm.category) return setFormError('Category is required.');
         setFormError(null);
 
         try {
-            const body = {
+            let imageURL = productForm.imageURL;
+
+            if (imageRemoved) {
+                imageURL = '';
+            } 
+
+            else if (selectedImage) {
+                const formData = new FormData();
+                formData.append('image', selectedImage);
+                formData.append('category', productForm.category);
+
+                const uploadRes = await fetch(`/api/products/${productID}/image`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!uploadRes.ok) {
+                    throw new Error('Failed to upload image');
+                }
+
+                const uploadData = await uploadRes.json();
+                imageURL = uploadData.imageURL;
+            }
+
+            const updateData = {
                 productName: productForm.productName,
                 category: productForm.category,
-                imageURL: productForm.imageURL || null,
+                imageURL,
                 addOns: productForm.addOns
                     .filter(a => a.addOnID !== '' && a.quantityRequired !== '')
                     .map(a => ({ addOnID: Number(a.addOnID), quantityRequired: Number(a.quantityRequired) })),
             };
 
             if (productForm.productType === 'simpleProduct') {
-                body.price = Number(productForm.price);
-                body.ingredients = productForm.ingredients
+                updateData.price = Number(productForm.price);
+                updateData.ingredients = productForm.ingredients
                     .filter(i => i.ingredientID !== '' && i.quantityRequired !== '')
                     .map(i => ({ ingredientID: Number(i.ingredientID), quantityRequired: Number(i.quantityRequired) }));
             } else if (productForm.productType === 'drink') {
-                body.sizes = productForm.sizes.map(s => ({
-                    drinkID: s.drinkID,
-                    ingredients: s.ingredients
-                        .filter(i => i.ingredientID !== '' && i.quantityRequired !== '')
-                        .map(i => ({ ingredientID: Number(i.ingredientID), quantityRequired: Number(i.quantityRequired) }))
+                updateData.sizes = productForm.sizes.map(size => ({
+                    drinkID: size.drinkID,
+                    size: size.size,
+                    price: Number(size.price),
+                    ingredients: productForm.drinkIngredients
+                        .filter(row => row.ingredientID !== '' && row.quantities?.[size.drinkID] !== '')
+                        .map(row => ({
+                            ingredientID: Number(row.ingredientID),
+                            quantityRequired: Number(row.quantities[size.drinkID])
+                        }))
                 }));
             } else if (productForm.productType === 'flavoredItem') {
-                body.flavors = productForm.flavors.map(f => ({
-                    flavoredItemID: f.flavoredItemID,
-                    ingredients: f.ingredients
-                        .filter(i => i.ingredientID !== '' && i.quantityRequired !== '')
-                        .map(i => ({ ingredientID: Number(i.ingredientID), quantityRequired: Number(i.quantityRequired) }))
+                updateData.flavors = productForm.flavors.map(flavor => ({
+                    flavoredItemID: flavor.flavoredItemID,
+                    flavorName: flavor.flavorName,
+                    price: Number(flavor.price),
+                    ingredients: productForm.flavorIngredients
+                        .filter(row => row.ingredientID !== '' && row.quantities?.[flavor.flavoredItemID] !== '')
+                        .map(row => ({
+                            ingredientID: Number(row.ingredientID),
+                            quantityRequired: Number(row.quantities[flavor.flavoredItemID])
+                        }))
                 }));
             }
 
-            const response = await fetch(`/api/products/${productID}`, {
+            const res = await fetch(`/api/products/${productID}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
+                body: JSON.stringify(updateData),
             });
 
-            if (!response.ok) throw new Error('Failed to update product.');
+            if (!res.ok) {
+                throw new Error('Failed to update product');
+            }
+
+            setImageRemoved(false);
+            setSelectedImage(null);
             navigate('/inventory');
         } catch (error) {
-            console.error(error);
-            setFormError('Something went wrong. Please try again.');
+            setFormError(error.message);
         }
+    };
+
+    const getIngredientName = (ingredientID) => {
+        return ingredientList.find(ing => String(ing.ingredientID) === String(ingredientID))?.ingredientName || '';
+    };
+
+    const handleSizeFieldChange = (index, field) => (event) => {
+        setProductForm(prev => ({
+            ...prev,
+            sizes: prev.sizes.map((size, i) =>
+                i === index ? { ...size, [field]: event.target.value } : size
+            )
+        }));
+    };
+
+    const handleFlavorFieldChange = (index, field) => (event) => {
+        setProductForm(prev => ({
+            ...prev,
+            flavors: prev.flavors.map((flavor, i) =>
+                i === index ? { ...flavor, [field]: event.target.value } : flavor
+            )
+        }));
+    };
+
+    const handleDrinkIngredientQuantityChange = (index, drinkID) => (event) => {
+        const value = event.target.value;
+        setProductForm(prev => ({
+            ...prev,
+            drinkIngredients: prev.drinkIngredients.map((row, i) =>
+                i === index
+                    ? { ...row, quantities: { ...row.quantities, [drinkID]: value } }
+                    : row
+            )
+        }));
+    };
+
+    const handleFlavorIngredientChange = (index, field) => (event) => {
+        setProductForm(prev => ({
+            ...prev,
+            flavorIngredients: prev.flavorIngredients.map((row, i) =>
+                i === index ? { ...row, [field]: event.target.value } : row
+            )
+        }));
+    };
+
+    const handleFlavorIngredientQuantityChange = (index, flavorID) => (event) => {
+        const value = event.target.value;
+        setProductForm(prev => ({
+            ...prev,
+            flavorIngredients: prev.flavorIngredients.map((row, i) =>
+                i === index
+                    ? { ...row, quantities: { ...row.quantities, [flavorID]: value } }
+                    : row
+            )
+        }));
+    };
+
+    const handleAddFlavorIngredientRow = () => {
+        setProductForm(prev => ({
+            ...prev,
+            flavorIngredients: [...prev.flavorIngredients, { ingredientID: '', quantities: {} }]
+        }));
+    };
+
+    const handleRemoveFlavorIngredientRow = (index) => {
+        setProductForm(prev => ({
+            ...prev,
+            flavorIngredients: prev.flavorIngredients.filter((_, i) => i !== index)
+        }));
+    };
+
+    const getAvailableFlavorIngredients = (currentIndex) => {
+        const selectedIDs = productForm.flavorIngredients
+            .map((row, i) => i !== currentIndex ? row.ingredientID : null)
+            .filter(id => id !== null && id !== '');
+        return ingredientList.filter(ing => !selectedIDs.includes(String(ing.ingredientID)));
     };
 
     if (loading) return <div className="update-product-container"><p>Loading...</p></div>;
@@ -305,6 +440,27 @@ function UpdateProduct() {
                     {/* CHANGE IMAGE */}
                     <div className="form-question">
                         <label>Image: </label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                        />
+                        {imagePreview && (
+                            <div>
+                                <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={handleRemoveImage}
+                                    style={{ marginLeft: '10px', padding: '5px 10px', backgroundColor: '#ff6b6b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                    Remove Image
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* ADD-ONS */}
@@ -377,34 +533,71 @@ function UpdateProduct() {
                     {/* DRINK */}
                     {productForm.productType === 'drink' && (
                         <div className="more-questions-container">
+                            <button type="button" className="addAddOnButton" onClick={handleAddDrinkIngredientRow}>
+                                Add Ingredient
+                            </button>
+
+                            {productForm.drinkIngredients.map((row, index) => (
+                                <div key={index} className="form-question">
+                                    <label>Ingredient:</label>
+                                    <div className="form-answer">
+                                        <select value={row.ingredientID} onChange={handleDrinkIngredientChange(index, 'ingredientID')}>
+                                            <option value="">Select Ingredient</option>
+                                            {getAvailableDrinkIngredients(index).map(ing => (
+                                                <option key={ing.ingredientID} value={ing.ingredientID}>
+                                                    {ing.ingredientName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {productForm.drinkIngredients.length > 1 && (
+                                            <button type="button" onClick={() => handleRemoveDrinkIngredientRow(index)}>
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                             {productForm.sizes.map((size, sizeIndex) => (
-                                <div key={sizeIndex}>
-                                    <p className="ingredientsLabel">{size.size} — ₱{size.price}</p>
-                                    <button type="button" className="addAddOnButton" onClick={() => handleAddDrinkIngredientRow(sizeIndex)}>Add Ingredient</button>
-                                    {size.ingredients.map((row, ingredientIndex) => (
-                                        <div key={ingredientIndex} className="form-question">
-                                            <label>Ingredient: </label>
+                                <> 
+                                    <hr />
+                                    <div key={size.drinkID} className="size-block">
+                                        <div className="form-question">
+                                            <label>Size and Price:</label>
                                             <div className="form-answer">
-                                                <select
-                                                    value={row.ingredientID}
-                                                    onChange={handleDrinkIngredientChange(sizeIndex, ingredientIndex, 'ingredientID')}>
-                                                    <option value="">Select Ingredient</option>
-                                                    {getAvailableDrinkIngredients(sizeIndex, ingredientIndex).map(ing => (
-                                                        <option key={ing.ingredientID} value={ing.ingredientID}>{ing.ingredientName}</option>
-                                                    ))}
-                                                </select>
                                                 <input
-                                                    type="number" min="0" step="0.01"
-                                                    placeholder="Quantity"
-                                                    value={row.quantityRequired}
-                                                    onChange={handleDrinkIngredientChange(sizeIndex, ingredientIndex, 'quantityRequired')} />
-                                                {size.ingredients.length > 1 && (
-                                                    <button type="button" onClick={() => handleRemoveDrinkIngredientRow(sizeIndex, ingredientIndex)}>Remove</button>
-                                                )}
+                                                    type="text"
+                                                    placeholder="Size name"
+                                                    value={size.size}
+                                                    onChange={handleSizeFieldChange(sizeIndex, 'size')}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    placeholder="Price"
+                                                    value={size.price}
+                                                    onChange={handleSizeFieldChange(sizeIndex, 'price')}
+                                                />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <label>Enter quantity for the following ingredients: </label>
+                                        {productForm.drinkIngredients.map((row, ingredientIndex) => (
+                                            <div key={ingredientIndex} className="form-question">
+                                                <label>{getIngredientName(row.ingredientID) || 'Ingredient qty'}:</label>
+                                                <div className="form-answer">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        placeholder={`Qty for ${size.size}`}
+                                                        value={row.quantities?.[size.drinkID] || ''}
+                                                        onChange={handleDrinkIngredientQuantityChange(ingredientIndex, size.drinkID)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
                             ))}
                         </div>
                     )}
@@ -412,34 +605,73 @@ function UpdateProduct() {
                     {/* FLAVORED ITEM */}
                     {productForm.productType === 'flavoredItem' && (
                         <div className="more-questions-container">
+                            <button type="button" className="addAddOnButton" onClick={handleAddFlavorIngredientRow}>
+                                Add Ingredient
+                            </button>
+
+                            {productForm.flavorIngredients.map((row, index) => (
+                                <div key={index} className="form-question">
+                                    <label>Ingredient:</label>
+                                    <div className="form-answer">
+                                        <select value={row.ingredientID} onChange={handleFlavorIngredientChange(index, 'ingredientID')}>
+                                            <option value="">Select Ingredient</option>
+                                            {getAvailableFlavorIngredients(index).map(ing => (
+                                                <option key={ing.ingredientID} value={ing.ingredientID}>
+                                                    {ing.ingredientName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {productForm.flavorIngredients.length > 1 && (
+                                            <button type="button" onClick={() => handleRemoveFlavorIngredientRow(index)}>
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+
                             {productForm.flavors.map((flavor, flavorIndex) => (
-                                <div key={flavorIndex}>
-                                    <p className="ingredientsLabel">{flavor.flavorName} — ₱{flavor.price}</p>
-                                    <button type="button" className="addAddOnButton" onClick={() => handleAddFlavorIngredientRow(flavorIndex)}>Add Ingredient</button>
-                                    {flavor.ingredients.map((row, ingredientIndex) => (
-                                        <div key={ingredientIndex} className="form-question">
-                                            <label>Ingredient: </label>
+                                <>
+                                    <hr />
+                                    <div key={flavor.flavoredItemID} className="size-block">
+                                        <div className="form-question">
+                                            <label>Flavor Name and Price: </label>
                                             <div className="form-answer">
-                                                <select
-                                                    value={row.ingredientID}
-                                                    onChange={handleFlavorIngredientChange(flavorIndex, ingredientIndex, 'ingredientID')}>
-                                                    <option value="">Select Ingredient</option>
-                                                    {getAvailableFlavorIngredients(flavorIndex, ingredientIndex).map(ing => (
-                                                        <option key={ing.ingredientID} value={ing.ingredientID}>{ing.ingredientName}</option>
-                                                    ))}
-                                                </select>
                                                 <input
-                                                    type="number" min="0" step="0.01"
-                                                    placeholder="Quantity"
-                                                    value={row.quantityRequired}
-                                                    onChange={handleFlavorIngredientChange(flavorIndex, ingredientIndex, 'quantityRequired')} />
-                                                {flavor.ingredients.length > 1 && (
-                                                    <button type="button" onClick={() => handleRemoveFlavorIngredientRow(flavorIndex, ingredientIndex)}>Remove</button>
-                                                )}
+                                                    type="text"
+                                                    placeholder="Flavor name"
+                                                    value={flavor.flavorName}
+                                                    onChange={handleFlavorFieldChange(flavorIndex, 'flavorName')}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    placeholder="Price"
+                                                    value={flavor.price}
+                                                    onChange={handleFlavorFieldChange(flavorIndex, 'price')}
+                                                />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        
+                                        <label>Enter Quantity for the following ingredients: </label>
+                                        {productForm.flavorIngredients.map((row, ingredientIndex) => (
+                                            <div key={ingredientIndex} className="form-question">
+                                                <label>{getIngredientName(row.ingredientID) || 'Ingredient qty'}:</label>
+                                                <div className="form-answer">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        placeholder={`Qty for ${flavor.flavorName}`}
+                                                        value={row.quantities?.[flavor.flavoredItemID] || ''}
+                                                        onChange={handleFlavorIngredientQuantityChange(ingredientIndex, flavor.flavoredItemID)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
                             ))}
                         </div>
                     )}

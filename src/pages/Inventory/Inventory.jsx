@@ -37,8 +37,7 @@ function Inventory() {
     };
 
     loadData();
-
-}, []);
+    }, []);
 
 //Get Categories from the products
 const categories = [...new Set(productList.map(p => p.category).filter(Boolean))];
@@ -48,16 +47,26 @@ const filterOptions = ['All Products', 'ingredients', ...categories];
 
 let displayedData = [];
 let isIngredient = false;
+const q = searchTerm.trim().toLowerCase();
 
 if (filter === 'all') {
-    displayedData = productList;
+    displayedData = productList.filter(p => {
+        if (!q) return true;
+        const name = (p.productName || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return name.includes(q) || cat.includes(q);
+    });
 } else if (filter === 'ingredients') {
-    displayedData = ingredientList.filter((ingredient) =>
-        ingredient.ingredientName.toLowerCase().includes(searchTerm.toLowerCase())
+    displayedData = ingredientList.filter(ingredient =>
+        ingredient.ingredientName.toLowerCase().includes(q)
     );
     isIngredient = true;
 } else {
-    displayedData = productList.filter(p => p.category === filter);
+    displayedData = productList.filter(p => {
+        if (p.category !== filter) return false;
+        if (!q) return true;
+        return (p.productName || '').toLowerCase().includes(q);
+    });
 }
 
     return (
@@ -68,25 +77,34 @@ if (filter === 'all') {
                 <div className = "inventory-content">
                     <div className = "inventory-list">
                         <div className = "inventory-list-header">
-                            <form className = "search-and-filters" action = "">
-                                <input className = "inv-search-bar" type = "text" placeholder = "⌕ Dae pa ini nagana hihi" />
-                                <select className = "inv-filter" value = {filter} onChange = {(e) => setFilter(e.target.value)}>
-                                    <option value = "all">All Products</option>
-                                    <option value = "ingredients">Ingredients</option>
-                                    {categories.map(category => (
-                                        <option key = {category} value = {category}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            </form>
-                            {isManager && 
-                                <div className = "extra-buttons">
-                                        <button onClick = {() => navigate(`/inventory/add-product`)}>
-                                            Add Product
-                                        </button>
+                            <form className = "search-and-filters">
+                                <div className = "s-and-f-actual">
+                                    <input className = "inv-search-bar" type = "text" placeholder = "⌕ Search current category" onChange = {(e) => setSearchTerm(e.target.value)}/>
+                                    <select className = "inv-filter" value = {filter} onChange = {(e) => setFilter(e.target.value)}>
+                                        <option value = "all">All Products</option>
+                                        <option value = "ingredients">Ingredients</option>
+                                        {categories.map(category => (
+                                            <option key = {category} value = {category}>
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
-                            }
+                                {isManager && 
+                                    <div className = "extra-buttons">
+                                            <button type = "button" onClick = {() => navigate(`/inventory/restock`)}>
+                                                Restock
+                                            </button>
+                                            <button type = "button" onClick={() => navigate('/inventory/add-addon')}
+                                            >
+                                                Add New Add-On
+                                            </button>
+                                            <button type = "button" onClick = {() => navigate(`/inventory/add-product`)}>
+                                                Add New Product/Ingredient
+                                            </button>
+                                    </div>
+                                }
+                            </form>
                             
                         </div>
 
@@ -127,22 +145,26 @@ if (filter === 'all') {
                             <div className="inv-products-container">
                             {displayedData.map((product) => (
                                 <div key={product.productID} className="inv-product-card">
-                                    {product.imageURL ? (
-                                        <img src={product.imageURL} alt={product.productName} className="inv-product-image" />
-                                    ) : (
-                                        <img src = {placeHolderImage} alt = "This product uses a placeholder image, but the placeholder image seems to be missing." />
-                                    )}
+                                    <div className = "inv-product-image-wrap">
+                                        {product.imageURL ? (
+                                            <img src={product.imageURL} alt={product.productName} className="inv-product-image" />
+                                        ) : (
+                                            <img src = {placeHolderImage} className = "inv-product-image-placeholder" alt = "This product uses a placeholder image, but the placeholder image seems to be missing." />
+                                        )}
+                                    </div>
                                     <div className="inv-product-card-content">
                                         <h3>{product.productName}</h3>
                                         <p className="inv-product-category">{product.category}</p>
                                         <div className="inv-product-stock">
-                                        <strong>Stock Left:</strong> <span className="stock-value">X</span> <br />
+                                        <strong>Stock:</strong> <span className="stock-value">{product.stock}</span>
+                                        </div>
+                                    </div>
+                                    <div className = "inv-product-card-footer">
                                         {isManager && 
-                                            <button onClick = {() => navigate(`/inventory/update-product/${product.productID}`)}>
+                                            <button className = "inv-update-button" onClick = {() => navigate(`/inventory/update-product/${product.productID}`)}>
                                                 Update
                                             </button>
                                         }
-                                        </div>
                                     </div>
                                 </div>
                             ))}

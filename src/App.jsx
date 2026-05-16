@@ -7,6 +7,8 @@ import UpdateIngredient from './pages/UpdateIngredient/UpdateIngredient.jsx';
 import AddProduct from './pages/AddProduct/AddProduct.jsx';
 import UpdateProduct from './pages/UpdateProduct/UpdateProduct.jsx';
 import UserManager from './pages/UserManager/UserManager.jsx';
+import Restock from './pages/Restock/Restock.jsx';
+import AddAddOn from './pages/AddAddOn/AddAddOn';
 import './css/App.css';
 import Pos from './pages/Pos/Pos';
 import { CartProvider } from './context/CartContext';
@@ -49,6 +51,16 @@ function AppRoutes() {
       <Route path = "/inventory/add-product/" element = {
         <ProtectedRoute>
           <AddProduct />
+        </ProtectedRoute>
+      } />
+      <Route path="/inventory/add-addon" element={
+          <ProtectedRoute>
+              <AddAddOn />
+          </ProtectedRoute>
+      } />
+      <Route path = "/inventory/restock" element = {
+        <ProtectedRoute>
+          <Restock />
         </ProtectedRoute>
       } />
       <Route path = "/inventory/update-ingredient/:ingredientID" element = {
