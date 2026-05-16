@@ -981,4 +981,95 @@ export async function updateFlavoredItemVariant(flavoredItemID, flavorName, pric
     }
 }
 
+export async function getFilteredOrders(filters) {
+    const { startDate, endDate, cashierId, productId } = filters;
+    let query = `
+        SELECT 
+            o.orderID, 
+            o.dateAndTime, 
+            COALESCE(SUM(oi.lineTotal), 0) as total,
+            o.discountPercent,
+            CONCAT(e.firstName, ' ', e.lastName) AS cashierName
+        FROM orders o
+        JOIN account a ON o.accountID = a.accountID
+        JOIN employee e ON a.employeeID = e.employeeID
+        LEFT JOIN orderItem oi ON o.orderID = oi.orderID
+        WHERE 1=1
+    `;
+    const params = [];
+
+    if (startDate) {
+        query += ' AND DATE(o.dateAndTime) >= ?';
+        params.push(startDate);
+    }
+    if (endDate) {
+        query += ' AND DATE(o.dateAndTime) <= ?';
+        params.push(endDate);
+    }
+    if (cashierId) {
+        query += ' AND a.accountID = ?';
+        params.push(cashierId);
+    }
+    if (productId) {
+        query += ' AND o.orderID IN (SELECT orderID FROM orderItem WHERE productID = ?)';
+        params.push(productId);
+    }
+
+    query += ' GROUP BY o.orderID ORDER BY o.dateAndTime DESC';
+
+    const [orders] = await pool.query(query, params);
+
+    for (const order of orders) {
+        const [items] = await pool.query(`
+            SELECT 
+                oi.orderItemID, 
+                oi.productQuantity as quantity, 
+                p.productName, 
+                p.productID,
+                p.productType,
+                CASE
+                    WHEN p.productType = 'drink' THEN d.size
+                    WHEN p.productType = 'flavoredItem' THEN fi.flavorName
+                    ELSE NULL
+                END AS variant
+            FROM orderItem oi
+            JOIN product p ON oi.productID = p.productID
+            LEFT JOIN orderItemDrink oid ON oi.orderItemID = oid.orderItemID
+            LEFT JOIN drink d ON oid.drinkID = d.drinkID
+            LEFT JOIN orderItemFlavoredItem oifi ON oi.orderItemID = oifi.orderItemID
+            LEFT JOIN flavoredItem fi ON oifi.flavoredItemID = fi.flavoredItemID
+            WHERE oi.orderID = ?
+        `, [order.orderID]);
+
+        for (const item of items) {
+            const [addOns] = await pool.query(`
+                SELECT a.addOnName, oiAO.addOnPriceAtTime as price
+                FROM orderItemAddOn oiAO
+                JOIN addOn a ON oiAO.addOnID = a.addOnID
+                WHERE oiAO.orderItemID = ?
+            `, [item.orderItemID]);
+            item.addOns = addOns;
+        }
+        order.items = items;
+    }
+
+    return orders;
+}
+
+export async function getCashiers() {
+    try {
+        const [rows] = await pool.query(`
+            SELECT a.accountID, CONCAT(e.firstName, ' ', e.lastName) AS cashierName
+            FROM account a
+            JOIN employee e ON a.employeeID = e.employeeID
+            WHERE a.role = 'Cashier' AND a.status = 'Active'
+            ORDER BY e.lastName, e.firstName
+        `);
+        return rows;
+    } catch (error) {
+        console.error('Error fetching cashiers:', error);
+        throw error;
+    }
+}
+
 export default pool;

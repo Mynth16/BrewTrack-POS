@@ -9,6 +9,7 @@ import UpdateProduct from './pages/UpdateProduct/UpdateProduct.jsx';
 import UserManager from './pages/UserManager/UserManager.jsx';
 import Restock from './pages/Restock/Restock.jsx';
 import AddAddOn from './pages/AddAddOn/AddAddOn';
+import ReportScreen from './pages/ReportScreen/ReportScreen.jsx';
 import './css/App.css';
 import Pos from './pages/Pos/Pos';
 import { CartProvider } from './context/CartContext';
@@ -76,6 +77,11 @@ function AppRoutes() {
       <Route path = "/user-manager" element = {
         <ProtectedRoute>
           <UserManager />
+        </ProtectedRoute>
+      } />
+      <Route path = "/reports" element = {
+        <ProtectedRoute>
+          <ReportScreen />
         </ProtectedRoute>
       } />
       <Route path="/" element={<Navigate to="/login" replace />} />

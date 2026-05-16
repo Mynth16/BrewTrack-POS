@@ -4,24 +4,26 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Initialize user from token on app load
     useEffect(() => {
         const restoreSession = async () => {
-            const token = localStorage.getItem('authToken');
-            if (token) {
+            const savedToken = localStorage.getItem('authToken');
+            if (savedToken) {
                 try {
                     const response = await fetch('/api/auth/verify', {
                         headers: {
-                            Authorization: `Bearer ${token}`,
+                            Authorization: `Bearer ${savedToken}`,
                         },
                     });
 
                     if (response.ok) {
                         const data = await response.json();
                         setUser(data.user);
+                        setToken(savedToken);
                     } else {
                         localStorage.removeItem('authToken');
                     }
@@ -67,6 +69,7 @@ export const AuthProvider = ({ children }) => {
 
                 const data = await response.json();
                 localStorage.setItem('authToken', data.token);
+                setToken(data.token);
                 setUser(data.user);
                 return true;
             } catch (err) {
@@ -89,6 +92,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('authToken');
         setUser(null);
+        setToken(null);
         setError(null);
     };
 
@@ -97,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated, error, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, error, loading }}>
             {children}
         </AuthContext.Provider>
     );

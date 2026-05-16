@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { 
     hashPassword, 
     verifyPassword, 
@@ -7,10 +8,26 @@ import {
     getUser,
     createUser,
     updateUser,
-    deactivateUser
+    deactivateUser,
+    getCashiers
 } from '../db.js';
 
 const router = express.Router();
+
+// Middleware to verify JWT token
+function authMiddleware(req, res, next) {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ success: false, error: 'No token provided' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        req.accountID = decoded.accountID;
+        next();
+    } catch (error) {
+        res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+}
 
 // GET /api/users - Get all active users
 router.get('/', async (req, res) => {
@@ -198,8 +215,19 @@ router.put('/:accountID', async (req, res) => {
     }
 });
 
+// GET /api/users/cashiers - Get all cashiers who have processed transactions
+router.get('/cashiers', authMiddleware, async (req, res) => {
+    try {
+        const cashiers = await getCashiers();
+        res.status(200).json({ success: true, data: cashiers });
+    } catch (error) {
+        console.error('Error fetching cashiers:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
 // DELETE /api/users/:accountID - Soft delete (deactivate) user
-router.delete('/:accountID', async (req, res) => {
+router.delete('/:accountID', authMiddleware, async (req, res) => {
     try {
         const { accountID } = req.params;
 

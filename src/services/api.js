@@ -13,6 +13,7 @@ export const productService = {
                 throw new Error(`Failed to fetch products: ${response.statusText}`);
             }
             const { data } = await response.json();
+            // data contains { categories, products, addOns }
             return data;
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -128,6 +129,74 @@ export const orderService = {
             return data;
         } catch (error) {
             console.error('Error fetching order:', error);
+            throw error;
+        }
+    },
+
+    // Fetch filtered orders for reports
+    async getOrders(filters = {}, token) {
+        try {
+            const query = new URLSearchParams(filters).toString();
+            const response = await fetch(`${API_BASE_URL}/orders${query ? '?' + query : ''}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch orders: ${response.statusText}`);
+            }
+
+            const { data } = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            throw error;
+        }
+    },
+};
+
+// User Service - API calls for users and cashiers
+export const userService = {
+    
+    // Fetch all cashiers
+    async getCashiers(token) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/cashiers`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch cashiers: ${response.statusText}`);
+            }
+
+            const { data } = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching cashiers:', error);
+            throw error;
+        }
+    },
+
+    // Fetch all active users/accounts
+    async getAllUsers(token) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch users: ${response.statusText}`);
+            }
+
+            const { data } = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching users:', error);
             throw error;
         }
     },
