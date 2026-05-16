@@ -189,7 +189,7 @@ function ReportScreen() {
                                         <td className="items-cell">
                                             {order.items && order.items.map(item => (
                                                 <div key={item.orderItemID} className="item-row">
-                                                    <span>{item.productName} x{item.quantity}</span>
+                                                    <span>{item.productName}{item.variant ? ` (${item.variant})` : ''} x{item.quantity}</span>
                                                     {item.addOns && item.addOns.length > 0 && (
                                                         <ul className="addons-list">
                                                             {item.addOns.map((ao, idx) => (

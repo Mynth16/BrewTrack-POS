@@ -792,9 +792,23 @@ export async function getFilteredOrders(filters) {
 
     for (const order of orders) {
         const [items] = await pool.query(`
-            SELECT oi.orderItemID, oi.productQuantity as quantity, p.productName, p.productID
+            SELECT 
+                oi.orderItemID, 
+                oi.productQuantity as quantity, 
+                p.productName, 
+                p.productID,
+                p.productType,
+                CASE
+                    WHEN p.productType = 'drink' THEN d.size
+                    WHEN p.productType = 'flavoredItem' THEN fi.flavorName
+                    ELSE NULL
+                END AS variant
             FROM orderItem oi
             JOIN product p ON oi.productID = p.productID
+            LEFT JOIN orderItemDrink oid ON oi.orderItemID = oid.orderItemID
+            LEFT JOIN drink d ON oid.drinkID = d.drinkID
+            LEFT JOIN orderItemFlavoredItem oifi ON oi.orderItemID = oifi.orderItemID
+            LEFT JOIN flavoredItem fi ON oifi.flavoredItemID = fi.flavoredItemID
             WHERE oi.orderID = ?
         `, [order.orderID]);
 
