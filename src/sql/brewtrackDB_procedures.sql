@@ -47,108 +47,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 2. sp_AddOrderItem
--- ============================================================
--- Adds an item to an order with variant (drink size/flavor/simple)
--- Handles automatic insertion to appropriate bridge table
--- Returns: orderItemID via SELECT result set
--- Usage: CALL sp_AddOrderItem(orderID, productID, variantID, quantity, priceAtTime);
--- ============================================================
-
-CREATE PROCEDURE sp_AddOrderItem(
-    IN p_orderID      INT,
-    IN p_productID    INT,
-    IN p_variantID    INT,
-    IN p_quantity     INT,
-    IN p_priceAtTime  DECIMAL(10, 2)
-)
-MODIFIES SQL DATA
-BEGIN
-    DECLARE v_orderItemID   INT;
-    DECLARE v_productType   VARCHAR(20);
-    DECLARE v_lineTotal     DECIMAL(10, 2);
-    DECLARE v_ingredientID  INT;
-    DECLARE v_qtyRequired   DECIMAL(10, 2);
-    DECLARE v_done          INT DEFAULT 0;
-
-    DECLARE cur_ingredients CURSOR FOR
-        SELECT ingredientID, quantityRequired
-        FROM productIngredient
-        WHERE productID = p_productID;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SELECT NULL as orderItemID;
-    END;
-
-    START TRANSACTION;
-
-    -- Validate inputs
-    IF p_orderID IS NULL OR p_orderID <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid orderID';
-    END IF;
-
-    IF p_productID IS NULL OR p_productID <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid productID';
-    END IF;
-
-    IF p_quantity IS NULL OR p_quantity <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid quantity';
-    END IF;
-
-    -- Get product type
-    SELECT productType INTO v_productType
-    FROM product
-    WHERE productID = p_productID;
-
-    IF v_productType IS NULL THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Product not found';
-    END IF;
-
-    -- Calculate line total
-    SET v_lineTotal = p_priceAtTime * p_quantity;
-
-    -- Insert order item
-    INSERT INTO orderItem (orderID, productID, productPriceAtTime, lineTotal, productQuantity)
-    VALUES (p_orderID, p_productID, p_priceAtTime, v_lineTotal, p_quantity);
-
-    SET v_orderItemID = LAST_INSERT_ID();
-
-    -- Insert into appropriate bridge table
-    IF v_productType = 'drink' THEN
-        INSERT INTO orderItemDrink (orderItemID, drinkID)
-        VALUES (v_orderItemID, p_variantID);
-    ELSEIF v_productType = 'flavoredItem' THEN
-        INSERT INTO orderItemFlavoredItem (orderItemID, flavoredItemID)
-        VALUES (v_orderItemID, p_variantID);
-    ELSEIF v_productType = 'simpleProduct' THEN
-        INSERT INTO orderItemSimpleProduct (orderItemID, simpleProductID)
-        VALUES (v_orderItemID, p_variantID);
-    END IF;
-
-    -- Deduct ingredient stock
-    OPEN cur_ingredients;
-    SET v_done = 0;  -- reset before inner loop starts
-    ing_loop: LOOP
-        FETCH cur_ingredients INTO v_ingredientID, v_qtyRequired;
-        IF v_done = 1 THEN LEAVE ing_loop; END IF;
-
-        UPDATE ingredient
-        SET stockQuantity = stockQuantity - (v_qtyRequired * p_quantity)
-        WHERE ingredientID = v_ingredientID;
-
-    END LOOP ing_loop;
-    CLOSE cur_ingredients;
-
-    COMMIT;
-    SELECT v_orderItemID as orderItemID;
-END$$
-
-
--- ============================================================
--- 3. sp_AddOrderItemAddOn
+-- 2. sp_AddOrderItemAddOn
 -- ============================================================
 -- Adds an add-on to an order item
 -- Usage: CALL sp_AddOrderItemAddOn(orderItemID, addOnID, addOnPrice, quantity);
@@ -181,7 +80,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 4. sp_GetProductMenu
+-- 3. sp_GetProductMenu
 -- ============================================================
 -- Retrieves complete menu for POS display
 -- Returns: all products grouped by category with variant counts
@@ -212,7 +111,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 5. sp_GetProductVariants
+-- 4. sp_GetProductVariants
 -- ============================================================
 -- Get all variants for a specific product
 -- Returns: variant details based on product type
@@ -270,7 +169,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 6. sp_GetAvailableAddOns
+-- 5. sp_GetAvailableAddOns
 -- ============================================================
 -- Get all add-ons available for a product
 -- Returns: add-on details with pricing
@@ -296,7 +195,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 7. sp_CalculateOrderTotal
+-- 6. sp_CalculateOrderTotal
 -- ============================================================
 -- Calculate final order total with discount
 -- Returns: subtotal, discount amount, final total
@@ -336,7 +235,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 8. sp_AuthenticateUser
+-- 7. sp_AuthenticateUser
 -- ============================================================
 -- Verify employee login credentials
 -- Returns: account details if successful, empty result set if failed
@@ -364,7 +263,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 9. sp_GetOrderHistory
+-- 8. sp_GetOrderHistory
 -- ============================================================
 -- Retrieve complete order details for receipt/history
 -- Returns: order with all items, variants, and add-ons
@@ -411,7 +310,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 10. sp_GetDailySalesReport
+-- 9. sp_GetDailySalesReport
 -- ============================================================
 -- Generate daily sales summary
 -- Returns: revenue metrics by payment method
@@ -438,7 +337,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 11. sp_SalesByCategory
+-- 10. sp_SalesByCategory
 -- ============================================================
 -- Category-level sales performance
 -- Returns: sales metrics per product category
@@ -467,7 +366,7 @@ BEGIN
 END$$
 
 -- ============================================================
--- 12. sp_GetTopSellingProducts
+-- 11. sp_GetTopSellingProducts
 -- ============================================================
 -- Best-selling products ranking
 -- Returns: top N products by sales volume/revenue
@@ -554,7 +453,16 @@ BEGIN
     END IF;
 END$$
 
--- for the dedcut ingredients
+-- ============================================================
+-- 13. sp_AddOrderItem (Variant-Aware)
+-- ============================================================
+-- Adds an item to an order with variant-specific ingredient deduction
+-- CRITICAL: Uses variant-specific ingredient tables (drinkIngredient, flavoredItemIngredient)
+-- This ensures accurate stock deduction for products with sizes/flavors
+-- Returns: orderItemID via SELECT result set
+-- Usage: CALL sp_AddOrderItem(orderID, productID, variantID, quantity, priceAtTime);
+-- ============================================================
+
 CREATE PROCEDURE sp_AddOrderItem(
   IN p_orderID      INT,
   IN p_productID    INT,
