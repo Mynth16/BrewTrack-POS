@@ -6,13 +6,13 @@
 }
 
 body {
-  background-color: #FFFBEF; /* Soft cream canvas */
+  background-color: #FFFBEF; 
 }
 
 .dashboard-container {
   min-height: 100vh;
   display: flex;
-  margin-left: 20px; /* Space for the left navigation panel */
+  margin-left: 20px; 
 }
 
 .dashboard-main {
@@ -30,7 +30,7 @@ body {
   margin-bottom: 5px;
 }
 
-/* Main Dashboard Grid System Layout */
+/* Main Dashboard Grid Layout */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -44,15 +44,15 @@ body {
   gap: 10px;
 }
 
-/* Revenue Horizontal Row layout */
+/* Horizontal Row  */
 .revenue-row {
   display: flex;
   gap: 10px;
 }
 
-/* Individual Card Styling */
+/* Card Styling */
 .dashboard-card {
-  background: linear-gradient(145deg, #2E2218, #19110A); /* Dark Earthy Blend */
+  background: linear-gradient(145deg, #2E2218, #19110A); 
   border-radius: 20px;
   padding: 20px;
   color: #FFFFFF;
@@ -64,7 +64,7 @@ body {
   flex: 1;
 }
 
-/* Chart Card Expansions */
+/* Chart Card  */
 .chart-card {
   min-height: 420px;
 }
@@ -84,17 +84,17 @@ body {
 
 .card-icon {
   font-size: 24px;
-  color: #556B2F; /* Muted green icon */
+  color: #556B2F; 
 }
 
 .card-value {
   font-size: 42px;
   font-weight: 600;
-  color: #A3C986; /* Accent green font */
+  color: #A3C986;
   margin-top: auto;
 }
 
-/* Small Bottom Row Cards */
+/* Bottom Row Cards */
 .bottom-cards-row {
   display: flex;
   gap: 10px;
@@ -122,7 +122,6 @@ body {
   font-size: 16px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 1100px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
