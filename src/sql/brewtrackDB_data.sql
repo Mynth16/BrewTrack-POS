@@ -3,8 +3,8 @@
 
 -- EMPLOYEES & ACCOUNTS
 INSERT INTO employee (employeeID, firstName, middleName, lastName, phoneNumber) VALUES
-(1, 'Daiza Janine', 'N/A',     'Fernandez',  '09171234567'),
-(2, 'Barias',       'N/A',     'Dela Torre', '09181234568'),
+(1, 'Daiza Janine', '',     'Fernandez',  '09171234567'),
+(2, 'Barias',       '',     'Dela Torre', '09181234568'),
 (3, 'Jada',         'De Asis', 'Parada',     '09191234569');
 
 INSERT INTO account (accountID, employeeID, username, role, password, status) VALUES
@@ -917,6 +917,14 @@ UPDATE product SET imageURL = '/products/Waffles/strawberryWaffle.jpg'    WHERE 
 UPDATE product SET imageURL = '/products/Extras/dipSauce.jpg' WHERE productID = 20;
 UPDATE product SET imageURL = '/products/Extras/egg.jpg'      WHERE productID = 19;
 UPDATE product SET imageURL = '/products/Extras/rice.jpg'     WHERE productID = 18;
+
+-- SNACKS (6 products)
+UPDATE product SET imageURL = '/products/Snacks/siomai.jpg'  WHERE productID = 1;
+UPDATE product SET imageURL = '/products/Snacks/friesSolo.jpg'  WHERE productID = 2;
+UPDATE product SET imageURL = '/products/Snacks/nachos.jpg'    WHERE productID = 3;
+UPDATE product SET imageURL = '/products/Snacks/friesOverload.jpg'  WHERE productID = 4;
+UPDATE product SET imageURL = '/products/Snacks/tunaSandwichWithFries.jpg'  WHERE productID = 5;
+UPDATE product SET imageURL = '/products/Snacks/burgerWithFries.jpg'  WHERE productID = 6;
 
 
 -- INSERTING SAMPLE DATA FOR INGREDIENTS REQUIRED (BOTH DRINKS AND FLAVORED ITEMS)
