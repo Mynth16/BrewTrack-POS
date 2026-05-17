@@ -6,6 +6,7 @@ export default function Payment({ cart, cartTotals, onClose, onPaymentComplete }
   const [amountTendered, setAmountTendered] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
   
   const { submitOrder } = useCart();
 
@@ -29,10 +30,12 @@ export default function Payment({ cart, cartTotals, onClose, onPaymentComplete }
 
   // Handle payment submission
   const handlePayNow = async () => {
-    // Validate amount
-    if (!amountTendered || !isAmountSufficient) {
-      setError('Please enter a sufficient cash amount');
-      return;
+    // Validate amount for cash payments only
+    if (selectedPaymentMethod === 'cash') {
+      if (!amountTendered || !isAmountSufficient) {
+        setError('Please enter a sufficient cash amount');
+        return;
+      }
     }
 
     try {
@@ -47,7 +50,7 @@ export default function Payment({ cart, cartTotals, onClose, onPaymentComplete }
       }
 
       // Call submitOrder from CartContext which handles the full payment flow
-      const order = await submitOrder('cash', token);
+      const order = await submitOrder(selectedPaymentMethod, token);
       
       if (order) {
         // Payment successful - pass order data back to Pos component
@@ -91,30 +94,75 @@ export default function Payment({ cart, cartTotals, onClose, onPaymentComplete }
             </div>
           </div>
 
+          {/* Payment Method Selection */}
+          <div className="payment-methods">
+            <h3>Payment Method</h3>
+            <div className="method-buttons">
+              <button
+                className={`payment-method-btn ${selectedPaymentMethod === 'cash' ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedPaymentMethod('cash');
+                  setAmountTendered('');
+                  setError('');
+                }}
+                disabled={isLoading}
+              >
+                Cash
+              </button>
+              <button
+                className={`payment-method-btn ${selectedPaymentMethod === 'gcash' ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedPaymentMethod('gcash');
+                  setAmountTendered('');
+                  setError('');
+                }}
+                disabled={isLoading}
+              >
+                GCash
+              </button>
+              <button
+                className={`payment-method-btn ${selectedPaymentMethod === 'creditcard' ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedPaymentMethod('creditcard');
+                  setAmountTendered('');
+                  setError('');
+                }}
+                disabled={isLoading}
+              >
+                Credit Card
+              </button>
+            </div>
+          </div>
+
           {/* Payment Input Section */}
           <div className="payment-form">
-            <div className="form-group">
-              <label htmlFor="amount-tendered">Cash Tendered</label>
-              <input
-                id="amount-tendered"
-                type="number"
-                placeholder="₱ 0.00"
-                value={amountTendered}
-                onChange={handleAmountChange}
-                className="amount-input"
-                min="0"
-                step="0.01"
-                disabled={isLoading}
-              />
-            </div>
+            {/* Cash-specific fields */}
+            {selectedPaymentMethod === 'cash' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="amount-tendered">Cash Tendered</label>
+                  <input
+                    id="amount-tendered"
+                    type="number"
+                    placeholder="₱ 0.00"
+                    value={amountTendered}
+                    onChange={handleAmountChange}
+                    className="amount-input"
+                    min="0"
+                    step="0.01"
+                    disabled={isLoading}
+                  />
+                </div>
 
-            {/* Change Display */}
-            <div className="form-group">
-              <label>Change</label>
-              <div className={`change-display ${isAmountSufficient && amountTendered ? 'sufficient' : 'insufficient'}`}>
-                {amountTendered ? `₱${change.toFixed(2)}` : '₱0.00'}
-              </div>
-            </div>
+                {/* Change Display */}
+                <div className="form-group">
+                  <label>Change</label>
+                  <div className={`change-display ${isAmountSufficient && amountTendered ? 'sufficient' : 'insufficient'}`}>
+                    {amountTendered ? `₱${change.toFixed(2)}` : '₱0.00'}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -136,7 +184,7 @@ export default function Payment({ cart, cartTotals, onClose, onPaymentComplete }
           <button
             className="btn-pay"
             onClick={handlePayNow}
-            disabled={!isAmountSufficient || isLoading}
+            disabled={selectedPaymentMethod === 'cash' ? (!isAmountSufficient || isLoading) : isLoading}
           >
             {isLoading ? 'Processing...' : 'Pay Now'}
           </button>
