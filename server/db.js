@@ -386,9 +386,72 @@ export async function finalizeOrder(orderId, paymentMethod) {
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
+
+        // Get all order items with their product info
+        const [orderItems] = await conn.query(
+            `SELECT oi.orderItemID, oi.productID, oi.productQuantity, p.productType,
+                    oid.drinkID, oifi.flavoredItemID, oisp.simpleProductID
+             FROM orderItem oi
+             JOIN product p ON oi.productID = p.productID
+             LEFT JOIN orderItemDrink oid ON oi.orderItemID = oid.orderItemID
+             LEFT JOIN orderItemFlavoredItem oifi ON oi.orderItemID = oifi.orderItemID
+             LEFT JOIN orderItemSimpleProduct oisp ON oi.orderItemID = oisp.orderItemID
+             WHERE oi.orderID = ?`,
+            [orderId]
+        );
+
+        // Decrement ingredient stock for each order item
+        for (const item of orderItems) {
+            if (item.productType === 'drink') {
+                // Decrement ingredients for drink variant
+                await conn.query(
+                    `UPDATE ingredient i
+                     JOIN drinkIngredient di ON di.ingredientID = i.ingredientID
+                     SET i.stockQuantity = i.stockQuantity - (di.quantityRequired * ?)
+                     WHERE di.drinkID = ?`,
+                    [item.productQuantity, item.drinkID]
+                );
+            } else if (item.productType === 'flavoredItem') {
+                // Decrement ingredients for flavored item variant
+                await conn.query(
+                    `UPDATE ingredient i
+                     JOIN flavoredItemIngredient fii ON fii.ingredientID = i.ingredientID
+                     SET i.stockQuantity = i.stockQuantity - (fii.quantityRequired * ?)
+                     WHERE fii.flavoredItemID = ?`,
+                    [item.productQuantity, item.flavoredItemID]
+                );
+            } else if (item.productType === 'simpleProduct') {
+                // Decrement ingredients for simple product
+                await conn.query(
+                    `UPDATE ingredient i
+                     JOIN productIngredient pi ON pi.ingredientID = i.ingredientID
+                     SET i.stockQuantity = i.stockQuantity - (pi.quantityRequired * ?)
+                     WHERE pi.productID = ?`,
+                    [item.productQuantity, item.productID]
+                );
+            }
+        }
+
+        // Decrement ingredient stock for add-ons
+        const [addOns] = await conn.query(
+            `SELECT oia.addOnQuantity, a.ingredientID
+             FROM orderItemAddOn oia
+             JOIN addOn a ON oia.addOnID = a.addOnID
+             JOIN orderItem oi ON oia.orderItemID = oi.orderItemID
+             WHERE oi.orderID = ?`,
+            [orderId]
+        );
+
+        for (const addOn of addOns) {
+            await conn.query(
+                `UPDATE ingredient SET stockQuantity = stockQuantity - ? WHERE ingredientID = ?`,
+                [addOn.addOnQuantity, addOn.ingredientID]
+            );
+        }
+
+        // Update order status and payment method
         const query = `UPDATE orders SET paymentMethod = ?, status = 'completed' WHERE orderID = ?`;
-        const [result] = await pool.query(query, [paymentMethod, orderId]);
-        return result.affectedRows > 0;
+        const [result] = await conn.query(query, [paymentMethod, orderId]);
 
         if (result.affectedRows === 0) {
             await conn.rollback();
@@ -401,6 +464,8 @@ export async function finalizeOrder(orderId, paymentMethod) {
         await conn.rollback();
         console.error('Error finalizing order:', error);
         throw error;
+    } finally {
+        conn.release();
     }
 }
 

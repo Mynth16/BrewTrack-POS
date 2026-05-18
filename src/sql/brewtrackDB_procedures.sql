@@ -515,31 +515,13 @@ BEGIN
     INSERT INTO orderItemDrink (orderItemID, drinkID)
     VALUES (v_orderItemID, p_variantID);
 
-    -- Deduct using drinkIngredient, keyed on the specific drinkID (size)
-    UPDATE ingredient i
-    JOIN drinkIngredient di ON di.ingredientID = i.ingredientID
-    SET i.stockQuantity = i.stockQuantity - (di.quantityRequired * p_quantity)
-    WHERE di.drinkID = p_variantID;
-
   ELSEIF v_productType = 'flavoredItem' THEN
     INSERT INTO orderItemFlavoredItem (orderItemID, flavoredItemID)
     VALUES (v_orderItemID, p_variantID);
 
-    -- Deduct using flavoredItemIngredient, keyed on the specific flavoredItemID
-    UPDATE ingredient i
-    JOIN flavoredItemIngredient fii ON fii.ingredientID = i.ingredientID
-    SET i.stockQuantity = i.stockQuantity - (fii.quantityRequired * p_quantity)
-    WHERE fii.flavoredItemID = p_variantID;
-
   ELSEIF v_productType = 'simpleProduct' THEN
     INSERT INTO orderItemSimpleProduct (orderItemID, simpleProductID)
     VALUES (v_orderItemID, p_variantID);
-
-    -- Deduct using productIngredient, keyed on productID
-    UPDATE ingredient i
-    JOIN productIngredient pi ON pi.ingredientID = i.ingredientID
-    SET i.stockQuantity = i.stockQuantity - (pi.quantityRequired * p_quantity)
-    WHERE pi.productID = p_productID;
   END IF;
 
   COMMIT;
