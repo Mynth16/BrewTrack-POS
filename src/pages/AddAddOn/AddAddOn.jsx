@@ -1,810 +1,153 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { useEffect, useState } from 'react';
-import './AddProduct.css'
+import './AddAddOn.css';
 
-function AddProduct() {
-
+function AddAddOn() {
     const navigate = useNavigate();
-    const [toggleEditMode, setToggleEditMode] = useState('product');
-    const [categories, setCategories] = useState([]);
-    const [ingredientList, setIngredientList] = useState([]);
-    const [addOnsList, setAddOnsList] = useState([]);
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState('');
-    const [formError, setFormError] = useState(null);
-
-    const validateProduct = () => {
-        if (!productForm.productName.trim()) return 'Product name is required.';
-        if (!productForm.category) return 'Category is required.';
-        if (!productForm.productType) return 'Product type is required.';
-
-        if (productForm.productType === 'simpleProduct') {
-            if (!productForm.price) return 'Price is required.';
-            const filledIngredients = productForm.ingredients.filter(i => i.ingredientID !== '' || i.quantityRequired !== '');
-            if (filledIngredients.length === 0) return 'At least one ingredient is required.';
-            for (const i of filledIngredients) {
-                if (!i.ingredientID || !i.quantityRequired) return 'All ingredient rows must have both an ingredient and a quantity.';
-            }
-        }
-
-        if (productForm.productType === 'drink') {
-            const filledSizes = productForm.priceAndSize.filter(s => s.size !== '' || s.price !== '');
-            if (filledSizes.length === 0) return 'At least one size with a price is required.';
-            for (const s of filledSizes) {
-                if (!s.size || !s.price) return 'All size rows must have both a size and a price.';
-            }
-            const filledIngredients = productForm.drinkIngredients.filter(i => i.ingredientID !== '');
-            if (filledIngredients.length === 0) return 'At least one ingredient is required.';
-            const validSizes = productForm.priceAndSize.filter(s => s.size !== '' && s.price !== '');
-            for (const i of filledIngredients) {
-                for (const s of validSizes) {
-                    if (!i.quantities?.[s.size]) return `Missing quantity for ingredient in size "${s.size}".`;
-                }
-            }
-        }
-
-        if (productForm.productType === 'flavoredItem') {
-            const filledFlavors = productForm.flavors.filter(f => f.flavorName !== '' || f.price !== '');
-            if (filledFlavors.length === 0) return 'At least one flavor with a price is required.';
-            for (const f of filledFlavors) {
-                if (!f.flavorName || !f.price) return 'All flavor rows must have both a name and a price.';
-            }
-            const filledIngredients = productForm.flavorIngredients.filter(i => i.ingredientID !== '');
-            if (filledIngredients.length === 0) return 'At least one ingredient is required.';
-            const validFlavors = productForm.flavors.filter(f => f.flavorName !== '' && f.price !== '');
-            for (const i of filledIngredients) {
-                for (const f of validFlavors) {
-                    if (!i.quantities?.[f.flavorName]) return `Missing quantity for ingredient in flavor "${f.flavorName}".`;
-                }
-            }
-        }
-
-        const partialAddOns = productForm.addOns.filter(a => a.addOnID !== '' || a.quantityRequired !== '');
-        for (const a of partialAddOns) {
-            if (!a.addOnID || !a.quantityRequired) return 'All add-on rows must have both an add-on selected and a quantity.';
-        }
-
-        return null;
-    };
-
-    const handleToggle = () => {
-        setToggleEditMode(prev => prev === 'product' ? 'ingredient' : 'product');
-    };
-
-    const handleImageChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setSelectedImage(file);
-            const reader = new FileReader();
-            reader.onload = (e) => setImagePreview(e.target.result);
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleRemoveImage = () => {
-        setSelectedImage(null);
-        setImagePreview('');
-    };
+    const [ingredients, setIngredients] = useState([]);
+    const [formData, setFormData] = useState({
+        ingredientID: '',
+        addOnName: '',
+        addOnPrice: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            const response = await fetch('/api/products/categories');
-            const data = await response.json();
-            setCategories(data.data);
-        };
         const fetchIngredients = async () => {
-            const response = await fetch('/api/ingredients');
-            const data = await response.json();
-            setIngredientList(data.ingredients);
+            try {
+                const response = await fetch('/api/ingredients');
+                const data = await response.json();
+                setIngredients(data.ingredients || []);
+            } catch (error) {
+                console.error('Failed to fetch ingredients:', error);
+            }
         };
-        const fetchAddOns = async () => {
-            const response = await fetch('/api/addons');
-            const data = await response.json();
-            setAddOnsList(data.addOns);
-        };
-        fetchCategories();
         fetchIngredients();
-        fetchAddOns();
     }, []);
 
-    // ── Add-ons (all product types) ──
-    const handleAddOnChange = (index, field) => (event) => {
-        setProductForm(prev => ({
+    const handleInputChange = (field) => (event) => {
+        setFormData(prev => ({
             ...prev,
-            addOns: prev.addOns.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
-            )
+            [field]: event.target.value
         }));
     };
 
-    const handleAddAddOnRow = () => {
-        setProductForm(prev => ({
-            ...prev,
-            addOns: [...prev.addOns, { addOnID: '', quantityRequired: '' }]
-        }));
-    };
-
-    const handleRemoveAddOnRow = (index) => {
-        setProductForm(prev => ({
-            ...prev,
-            addOns: prev.addOns.filter((_, i) => i !== index)
-        }));
-    };
-
-    const getAvailableAddOns = (currentIndex) => {
-        const selectedIDs = productForm.addOns
-            .map((row, i) => i !== currentIndex ? row.addOnID : null)
-            .filter(id => id !== null && id !== '');
-        return addOnsList.filter(addOn => !selectedIDs.includes(String(addOn.addOnID)));
-    };
-
-    // ── Product form state ──
-    const [productForm, setProductForm] = useState({
-        productName: '',
-        category: '',
-        productType: '',
-        price: '',
-        priceAndSize: [{ size: '', price: '' }],
-        imageUrl: '',
-        drinkIngredients: [{ ingredientID: '', quantityRequired: {} }],
-        flavors: [{ flavorName: '', price: '' }],
-        flavorIngredients: [{ ingredientID: '', quantities: {} }],
-        ingredients: [{ ingredientID: '', quantityRequired: '' }],
-        addOns: [{ addOnID: '', quantityRequired: '' }]
-    });
-
-    const handleProductForm = (field) => (event) => {
-        setProductForm(prev => ({ ...prev, [field]: event.target.value }));
-    };
-
-    // ── Simple product ingredients ──
-    const handleIngredientChange = (index, field) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            ingredients: prev.ingredients.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
-            )
-        }));
-    };
-
-    const handleAddIngredientRow = () => {
-        setProductForm(prev => ({
-            ...prev,
-            ingredients: [...prev.ingredients, { ingredientID: '', quantityRequired: '' }]
-        }));
-    };
-
-    const handleRemoveIngredientRow = (index) => {
-        setProductForm(prev => ({
-            ...prev,
-            ingredients: prev.ingredients.filter((_, i) => i !== index)
-        }));
-    };
-
-    const getAvailableIngredients = (currentIndex) => {
-        const selectedIDs = productForm.ingredients
-            .map((row, i) => i !== currentIndex ? row.ingredientID : null)
-            .filter(id => id !== null && id !== '');
-        return ingredientList.filter(ingredient =>
-            !selectedIDs.includes(String(ingredient.ingredientID))
-        );
-    };
-
-    const handleSubmitProduct = async (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        const error = validateProduct();
-        if (error) { setFormError(error); return; }
-        setFormError(null);
+        setLoading(true);
+        setError('');
 
         try {
-            const body = {
-                productName: productForm.productName,
-                category: productForm.category,
-                productType: productForm.productType,
-                addOns: productForm.addOns
-                    .filter(a => a.addOnID !== '' && a.quantityRequired !== '')
-                    .map(a => ({ addOnID: Number(a.addOnID), quantityRequired: Number(a.quantityRequired) })),
-                price: Number(productForm.price),
-                ingredients: productForm.ingredients
-                    .filter(i => i.ingredientID !== '' && i.quantityRequired !== '')
-                    .map(i => ({ ingredientID: Number(i.ingredientID), quantityRequired: Number(i.quantityRequired) })),
-                priceAndSize: productForm.priceAndSize.filter(s => s.size !== '' && s.price !== ''),
-                drinkIngredients: productForm.drinkIngredients
-                    .filter(i => i.ingredientID !== '')
-                    .map(i => ({ ingredientID: Number(i.ingredientID), quantities: i.quantities })),
-                flavors: productForm.flavors.filter(f => f.flavorName !== '' && f.price !== ''),
-                flavorIngredients: productForm.flavorIngredients
-                    .filter(i => i.ingredientID !== '')
-                    .map(i => ({ ingredientID: Number(i.ingredientID), quantities: i.quantities })),
-            };
-
-            const response = await fetch('/api/products', {
+            const response = await fetch('/api/addons', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to add product.');
-            }
-
-            const responseData = await response.json();
-            const productID = responseData.productID;
-
-            if (selectedImage && productID) {
-                const formData = new FormData();
-                formData.append('image', selectedImage);
-                formData.append('category', productForm.category);
-                const uploadRes = await fetch(`/api/products/${productID}/image`, {
-                    method: 'POST',
-                    body: formData,
-                });
-                if (!uploadRes.ok) console.warn('Image upload failed, but product was created');
-            }
-
-            setSelectedImage(null);
-            setImagePreview('');
-            navigate('/inventory');
-        } catch (error) {
-            console.error(error);
-            setFormError(error.message);
-        }
-    };
-
-    // ── Drink handlers ──
-    const handleSizeChange = (index, field) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            priceAndSize: prev.priceAndSize.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
-            )
-        }));
-    };
-
-    const handleAddSizeRow = () => {
-        setProductForm(prev => ({
-            ...prev,
-            priceAndSize: [...prev.priceAndSize, { size: '', price: '' }]
-        }));
-    };
-
-    const handleRemoveSizeRow = (index) => {
-        setProductForm(prev => ({
-            ...prev,
-            priceAndSize: prev.priceAndSize.filter((_, i) => i !== index)
-        }));
-    };
-
-    const handleDrinkIngredientChange = (index, field) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            drinkIngredients: prev.drinkIngredients.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
-            )
-        }));
-    };
-
-    const handleDrinkIngredientQuantityChange = (ingredientIndex, size) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            drinkIngredients: prev.drinkIngredients.map((row, i) =>
-                i === ingredientIndex
-                    ? { ...row, quantities: { ...row.quantities, [size]: event.target.value } }
-                    : row
-            )
-        }));
-    };
-
-    const handleAddDrinkIngredientRow = () => {
-        setProductForm(prev => ({
-            ...prev,
-            drinkIngredients: [...prev.drinkIngredients, { ingredientID: '', quantities: {} }]
-        }));
-    };
-
-    const handleRemoveDrinkIngredientRow = (index) => {
-        setProductForm(prev => ({
-            ...prev,
-            drinkIngredients: prev.drinkIngredients.filter((_, i) => i !== index)
-        }));
-    };
-
-    const getAvailableDrinkIngredients = (currentIndex) => {
-        const selectedIDs = productForm.drinkIngredients
-            .map((row, i) => i !== currentIndex ? row.ingredientID : null)
-            .filter(id => id !== null && id !== '');
-        return ingredientList.filter(ingredient =>
-            !selectedIDs.includes(String(ingredient.ingredientID))
-        );
-    };
-
-    // ── Flavored item handlers ──
-    const handleFlavorChange = (index, field) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            flavors: prev.flavors.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
-            )
-        }));
-    };
-
-    const handleAddFlavorRow = () => {
-        setProductForm(prev => ({
-            ...prev,
-            flavors: [...prev.flavors, { flavorName: '', price: '' }]
-        }));
-    };
-
-    const handleRemoveFlavorRow = (index) => {
-        setProductForm(prev => ({
-            ...prev,
-            flavors: prev.flavors.filter((_, i) => i !== index)
-        }));
-    };
-
-    const handleFlavorIngredientChange = (index, field) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            flavorIngredients: prev.flavorIngredients.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
-            )
-        }));
-    };
-
-    const handleFlavorIngredientQuantityChange = (ingredientIndex, flavorName) => (event) => {
-        setProductForm(prev => ({
-            ...prev,
-            flavorIngredients: prev.flavorIngredients.map((row, i) =>
-                i === ingredientIndex
-                    ? { ...row, quantities: { ...row.quantities, [flavorName]: event.target.value } }
-                    : row
-            )
-        }));
-    };
-
-    const handleAddFlavorIngredientRow = () => {
-        setProductForm(prev => ({
-            ...prev,
-            flavorIngredients: [...prev.flavorIngredients, { ingredientID: '', quantities: {} }]
-        }));
-    };
-
-    const handleRemoveFlavorIngredientRow = (index) => {
-        setProductForm(prev => ({
-            ...prev,
-            flavorIngredients: prev.flavorIngredients.filter((_, i) => i !== index)
-        }));
-    };
-
-    const getAvailableFlavorIngredients = (currentIndex) => {
-        const selectedIDs = productForm.flavorIngredients
-            .map((row, i) => i !== currentIndex ? row.ingredientID : null)
-            .filter(id => id !== null && id !== '');
-        return ingredientList.filter(ingredient =>
-            !selectedIDs.includes(String(ingredient.ingredientID))
-        );
-    };
-
-    // ── Ingredient form ──
-    const [ingredientsForm, setIngredientsForm] = useState({
-        ingredientName: '',
-        stockQuantity: '',
-        minStockQuantity: '',
-        unit: '',
-        expiryDate: ''
-    });
-
-    const handleIngredientsForm = (field) => (event) => {
-        setIngredientsForm(prev => ({ ...prev, [field]: event.target.value }));
-    };
-
-    const handleSubmitIngredients = async (event) => {
-        event.preventDefault();
-        try {
-            const response = await fetch('/api/ingredients', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
-                    ingredientName: ingredientsForm.ingredientName.trim(),
-                    stockQuantity: Number(ingredientsForm.stockQuantity),
-                    minStockLevel: ingredientsForm === '' ? null : Number(ingredientsForm.minStockLevel),
-                    unit: ingredientsForm.unit.trim(),
-                    expiryDate: ingredientsForm.expiryDate || null,
-                }),
+                    ingredientID: Number(formData.ingredientID),
+                    addOnName: formData.addOnName.trim(),
+                    addOnPrice: Number(formData.addOnPrice)
+                })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to add this ingredient.');
+                throw new Error(errorData.error || 'Failed to add add-on');
             }
 
             navigate('/inventory');
         } catch (error) {
-            console.error(error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="ap-container">
-            {toggleEditMode === 'product' ? (
+        <div className="aa-wrapper">
+            <div className="aa-screen">
 
-                /* ══════════════ PRODUCT FORM ══════════════ */
-                <div className="ap-form-wrapper">
-                    <form>
-                        <div className="ap-form-header">
-                            <h2>Add Product</h2>
-                            <div className="ap-header-buttons">
-                                <button className="ap-toggle-btn" type="button" onClick={handleToggle}>
-                                    Toggle Product/Ingredient
-                                </button>
-                                <button className="ap-back-btn" type="button" onClick={() => navigate('/inventory')}>
-                                    Back
-                                </button>
-                            </div>
-                        </div>
-                        <hr className="ap-divider" />
+                {/* ── Header ── */}
+                <div className="aa-header">
+                    <h1>Add New Add-On</h1>
+                    <button
+                        type="button"
+                        className="aa-back-btn"
+                        onClick={() => navigate('/inventory')}
+                    >
+                        Back
+                    </button>
+                </div>
 
-                        {/* Product Name */}
-                        <div className="ap-field">
-                            <label>Enter Product Name:</label>
-                            <div className="ap-field-input">
-                                <input
-                                    type="text"
-                                    placeholder="Enter Product Name"
-                                    value={productForm.productName}
-                                    onChange={handleProductForm('productName')}
-                                    required />
-                            </div>
-                        </div>
+                {/* ── Form card ── */}
+                <div className="aa-card">
+                    <form onSubmit={handleSubmit}>
 
-                        {/* Category */}
-                        <div className="ap-field">
-                            <label>Select Category:</label>
-                            <div className="ap-field-input">
-                                <select value={productForm.category} onChange={handleProductForm('category')} required>
-                                    <option value="">Select Category</option>
-                                    {categories.map(category => (
-                                        <option key={category} value={category}>{category}</option>
+                        {error && (
+                            <div className="aa-error">{error}</div>
+                        )}
+
+                        <div className="aa-field">
+                            <label>Select Ingredient:</label>
+                            <div className="aa-field-input">
+                                <select
+                                    value={formData.ingredientID}
+                                    onChange={handleInputChange('ingredientID')}
+                                    required
+                                >
+                                    <option value="">Select Ingredient</option>
+                                    {ingredients.map(ingredient => (
+                                        <option key={ingredient.ingredientID} value={ingredient.ingredientID}>
+                                            {ingredient.ingredientName}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
                         </div>
 
-                        {/* Image */}
-                        <div className="ap-field">
-                            <label>Select Image:</label>
-                            <div className="ap-field-input">
-                                <input type="file" accept="image/*" onChange={handleImageChange} />
-                                {imagePreview && (
-                                    <div>
-                                        <img
-                                            src={imagePreview}
-                                            alt="Product Preview"
-                                            style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveImage}
-                                            style={{ marginLeft: '10px', padding: '5px 10px', backgroundColor: '#ff6b6b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                                        >
-                                            Remove Image
-                                        </button>
-                                    </div>
-                                )}
+                        <div className="aa-field">
+                            <label>Add-On Name:</label>
+                            <div className="aa-field-input">
+                                <input
+                                    type="text"
+                                    value={formData.addOnName}
+                                    onChange={handleInputChange('addOnName')}
+                                    placeholder="Enter add-on name"
+                                    required
+                                />
                             </div>
                         </div>
 
-                        {/* Add-ons */}
-                        <button type="button" className="ap-add-btn" onClick={handleAddAddOnRow}>Add Add-On</button>
-                        {productForm.addOns.map((row, index) => (
-                            <div key={index} className="ap-field">
-                                <label>Select add-ons for this product:</label>
-                                <div className="ap-addon-row">
-                                    <select value={row.addOnID} onChange={handleAddOnChange(index, 'addOnID')}>
-                                        <option value="">Select Add-On</option>
-                                        {getAvailableAddOns(index).map(addOn => (
-                                            <option key={addOn.addOnID} value={addOn.addOnID}>
-                                                {addOn.addOnName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="Enter quantity required"
-                                        value={row.quantityRequired}
-                                        onChange={handleAddOnChange(index, 'quantityRequired')} />
-                                    {productForm.addOns.length > 1 && (
-                                        <button type="button" onClick={() => handleRemoveAddOnRow(index)}>Remove</button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-
-                        {/* Product Type */}
-                        <div className="ap-field">
-                            <label>Select Product Type (Cannot be changed later):</label>
-                            <div className="ap-field-input">
-                                <select value={productForm.productType} onChange={handleProductForm('productType')}>
-                                    <option value="">Select Product Type</option>
-                                    <option value="simpleProduct">Meals</option>
-                                    <option value="drink">Drinks</option>
-                                    <option value="flavoredItem">Flavored Foods (Ex. Fries)</option>
-                                </select>
+                        <div className="aa-field">
+                            <label>Price:</label>
+                            <div className="aa-field-input">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={formData.addOnPrice}
+                                    onChange={handleInputChange('addOnPrice')}
+                                    placeholder="Enter price"
+                                    required
+                                />
                             </div>
                         </div>
 
-                        <br /><hr className="ap-divider" />
+                        <button
+                            type="submit"
+                            className="aa-submit-btn"
+                            disabled={loading}
+                        >
+                            {loading ? 'Adding...' : 'Add Add-On'}
+                        </button>
 
-                        {/* ── Simple Product ── */}
-                        {productForm.productType === 'simpleProduct' && (
-                            <div className="ap-more-questions">
-                                <div className="ap-field">
-                                    <label>Price:</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="Enter Price"
-                                        value={productForm.price}
-                                        onChange={handleProductForm('price')}
-                                        required />
-                                </div>
-                                <button type="button" className="ap-add-btn" onClick={handleAddIngredientRow}>Add Ingredient</button>
-                                {productForm.ingredients.map((row, index) => (
-                                    <div key={index} className="ap-field">
-                                        <label>Ingredients (w/ quantities):</label>
-                                        <div className="ap-field-input">
-                                            <select value={row.ingredientID} onChange={handleIngredientChange(index, 'ingredientID')}>
-                                                <option value="">Select Ingredient</option>
-                                                {getAvailableIngredients(index).map(ingredient => (
-                                                    <option key={ingredient.ingredientID} value={ingredient.ingredientID}>
-                                                        {ingredient.ingredientName}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="Enter quantity"
-                                                value={row.quantityRequired}
-                                                onChange={handleIngredientChange(index, 'quantityRequired')} />
-                                            {productForm.ingredients.length > 1 && (
-                                                <button type="button" className="ap-remove-btn" onClick={() => handleRemoveIngredientRow(index)}>Remove</button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                                {formError && <div className="ap-error">{formError}</div>}
-                                <button className="ap-submit-btn" type="button" onClick={handleSubmitProduct}>Submit Product</button>
-                            </div>
-                        )}
-
-                        {/* ── Drinks ── */}
-                        {productForm.productType === 'drink' && (
-                            <div className="ap-more-questions">
-                                <button className="ap-add-btn" type="button" onClick={handleAddSizeRow}>Add Size</button>
-                                {productForm.priceAndSize.map((row, index) => (
-                                    <div key={index} className="ap-field">
-                                        <label>Sizes and Prices:</label>
-                                        <div className="ap-size-row">
-                                            <input
-                                                type="text"
-                                                placeholder="Size (e.g. 12oz)"
-                                                value={row.size}
-                                                onChange={handleSizeChange(index, 'size')} />
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="Price"
-                                                value={row.price}
-                                                onChange={handleSizeChange(index, 'price')} />
-                                            {productForm.priceAndSize.length > 1 && (
-                                                <button type="button" onClick={() => handleRemoveSizeRow(index)}>Remove</button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <button type="button" className="ap-add-btn" onClick={handleAddDrinkIngredientRow}>Add Ingredient</button>
-                                <p className="ap-ingredients-label">Select ingredients and quantity required for each size</p>
-                                {productForm.drinkIngredients.map((row, index) => {
-                                    const sizes = productForm.priceAndSize.filter(s => s.size !== '');
-                                    return (
-                                        <div className="ap-ingredient-section" key={index}>
-                                            {sizes.length === 0 ? (
-                                                <div className="ap-ingredient-row">
-                                                    <select value={row.ingredientID} onChange={handleDrinkIngredientChange(index, 'ingredientID')}>
-                                                        <option value="">Select Ingredient</option>
-                                                        {getAvailableDrinkIngredients(index).map(ingredient => (
-                                                            <option key={ingredient.ingredientID} value={ingredient.ingredientID}>
-                                                                {ingredient.ingredientName}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {productForm.drinkIngredients.length > 1 && (
-                                                        <button className="ap-remove-btn" type="button" onClick={() => handleRemoveDrinkIngredientRow(index)}>-</button>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                sizes.map((s, sizeIndex) => (
-                                                    <div key={sizeIndex} className="ap-ingredient-row">
-                                                        {sizeIndex === 0 ? (
-                                                            <select value={row.ingredientID} onChange={handleDrinkIngredientChange(index, 'ingredientID')}>
-                                                                <option value="">Select Ingredient</option>
-                                                                {getAvailableDrinkIngredients(index).map(ingredient => (
-                                                                    <option key={ingredient.ingredientID} value={ingredient.ingredientID}>
-                                                                        {ingredient.ingredientName}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        ) : (
-                                                            <span className="ap-select-spacer"></span>
-                                                        )}
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            placeholder={`Qty for ${s.size}`}
-                                                            value={row.quantities?.[s.size] || ''}
-                                                            onChange={handleDrinkIngredientQuantityChange(index, s.size)} />
-                                                        {productForm.drinkIngredients.length > 1 && sizeIndex === 0 ? (
-                                                            <button className="ap-remove-btn" type="button" onClick={() => handleRemoveDrinkIngredientRow(index)}>-</button>
-                                                        ) : (
-                                                            <span className="ap-btn-spacer"></span>
-                                                        )}
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                                {formError && <div className="ap-error">{formError}</div>}
-                                <button className="ap-submit-btn" type="button" onClick={handleSubmitProduct}>Submit Product</button>
-                            </div>
-                        )}
-
-                        {/* ── Flavored Items ── */}
-                        {productForm.productType === 'flavoredItem' && (
-                            <div className="ap-more-questions">
-                                <button type="button" className="ap-add-btn" onClick={handleAddFlavorRow}>Add Flavor</button>
-                                {productForm.flavors.map((row, index) => (
-                                    <div key={index} className="ap-field">
-                                        <label>Flavors and Prices:</label>
-                                        <div className="ap-size-row">
-                                            <input
-                                                type="text"
-                                                placeholder="Flavor Name (e.g. Cheese)"
-                                                value={row.flavorName}
-                                                onChange={handleFlavorChange(index, 'flavorName')} />
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="Price"
-                                                value={row.price}
-                                                onChange={handleFlavorChange(index, 'price')} />
-                                            {productForm.flavors.length > 1 && (
-                                                <button type="button" onClick={() => handleRemoveFlavorRow(index)}>Remove</button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <button type="button" className="ap-add-btn" onClick={handleAddFlavorIngredientRow}>Add Ingredient</button>
-                                <p className="ap-ingredients-label">Select ingredients and quantity required for each flavor</p>
-                                {productForm.flavorIngredients.map((row, index) => {
-                                    const flavors = productForm.flavors.filter(f => f.flavorName !== '');
-                                    return (
-                                        <div className="ap-ingredient-section" key={index}>
-                                            {flavors.length === 0 ? (
-                                                <div className="ap-ingredient-row">
-                                                    <select value={row.ingredientID} onChange={handleFlavorIngredientChange(index, 'ingredientID')}>
-                                                        <option value="">Select Ingredient</option>
-                                                        {getAvailableFlavorIngredients(index).map(ingredient => (
-                                                            <option key={ingredient.ingredientID} value={ingredient.ingredientID}>
-                                                                {ingredient.ingredientName}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {productForm.flavorIngredients.length > 1 && (
-                                                        <button className="ap-remove-btn" type="button" onClick={() => handleRemoveFlavorIngredientRow(index)}>-</button>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                flavors.map((f, flavorIndex) => (
-                                                    <div key={flavorIndex} className="ap-ingredient-row">
-                                                        {flavorIndex === 0 ? (
-                                                            <select value={row.ingredientID} onChange={handleFlavorIngredientChange(index, 'ingredientID')}>
-                                                                <option value="">Select Ingredient</option>
-                                                                {getAvailableFlavorIngredients(index).map(ingredient => (
-                                                                    <option key={ingredient.ingredientID} value={ingredient.ingredientID}>
-                                                                        {ingredient.ingredientName}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        ) : (
-                                                            <span className="ap-select-spacer"></span>
-                                                        )}
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            placeholder={`Qty for ${f.flavorName}`}
-                                                            value={row.quantities?.[f.flavorName] || ''}
-                                                            onChange={handleFlavorIngredientQuantityChange(index, f.flavorName)} />
-                                                        {productForm.flavorIngredients.length > 1 && flavorIndex === 0 ? (
-                                                            <button className="ap-remove-btn" type="button" onClick={() => handleRemoveFlavorIngredientRow(index)}>-</button>
-                                                        ) : (
-                                                            <span className="ap-btn-spacer"></span>
-                                                        )}
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                                {formError && <div className="ap-error">{formError}</div>}
-                                <button className="ap-submit-btn" type="button" onClick={handleSubmitProduct}>Submit Product</button>
-                            </div>
-                        )}
                     </form>
                 </div>
 
-            ) : (
-
-                /* ══════════════ INGREDIENT FORM ══════════════ */
-                <div className="ap-ingredient-form-wrapper">
-                    <form>
-                        <div className="ap-form-header">
-                            <h2>Add Ingredient</h2>
-                            <div className="ap-header-buttons">
-                                <button className="ap-toggle-btn" type="button" onClick={handleToggle}>
-                                    Toggle Product/Ingredient
-                                </button>
-                                <button className="ap-back-btn" type="button" onClick={() => navigate('/inventory')}>
-                                    Back
-                                </button>
-                            </div>
-                        </div>
-                        <hr className="ap-divider" />
-
-                        <div className="ap-field">
-                            <label>Enter Ingredient Name:</label>
-                            <input type="text" placeholder="Enter Ingredient Name" onChange={handleIngredientsForm('ingredientName')} required />
-                        </div>
-                        <div className="ap-field">
-                            <label>Enter Current Stock Quantity:</label>
-                            <input type="number" min="0" step="0.01" placeholder="Enter Current Stock Quantity" onChange={handleIngredientsForm('stockQuantity')} required />
-                        </div>
-                        <div className="ap-field">
-                            <label>Minimum Stock Level (For Alerts):</label>
-                            <input type="number" min="0" step="0.01" placeholder="Enter Minimum Stock Level" onChange={handleIngredientsForm('minStockLevel')} />
-                        </div>
-                        <div className="ap-field">
-                            <label>Enter Unit:</label>
-                            <input type="text" placeholder="Ex. (l, m, kg)" onChange={handleIngredientsForm('unit')} required />
-                        </div>
-                        <div className="ap-field">
-                            <label>Enter Expiration Date:</label>
-                            <input type="date" onChange={handleIngredientsForm('expiryDate')} />
-                        </div>
-
-                        <div className="ap-submit-row">
-                            <button className="ap-submit-btn" type="button" onClick={handleSubmitIngredients}>
-                                Add Ingredient
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+            </div>
         </div>
     );
 }
 
-export default AddProduct;
+export default AddAddOn;
