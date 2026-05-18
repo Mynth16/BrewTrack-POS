@@ -5,6 +5,42 @@ import Navigation from '../../components/Navigation/Navigation.jsx';
 import './Inventory.css';
 import placeHolderImage from '../../assets/brewtrack_logo.png';
 
+// CALCULATINGG THE SOTCK
+function calcIngredientCapacity(quantityRequired, stockQuantity) {
+    if (!quantityRequired || Number(quantityRequired) <= 0) return Infinity;
+    return Math.max(0, Math.floor(Number(stockQuantity) / Number(quantityRequired)));
+}
+
+function calcVariantStock(ingredients) {
+    if (!Array.isArray(ingredients) || ingredients.length === 0) return 100;
+    const caps = ingredients
+        .map(i => calcIngredientCapacity(i.quantityRequired, i.stockQuantity))
+        .filter(Number.isFinite);
+    return caps.length ? Math.min(...caps) : 100;
+}
+
+function getVariantStocks(product) {
+    const { productType, ingredientRequirements, stock } = product;
+
+    if (productType === 'drink' && Array.isArray(ingredientRequirements) && ingredientRequirements.length > 0) {
+        return ingredientRequirements.map(variant => ({
+            label: variant.size,
+            stock: calcVariantStock(variant.ingredients),
+        }));
+    }
+
+    if (productType === 'flavoredItem' && Array.isArray(ingredientRequirements) && ingredientRequirements.length > 0) {
+        return ingredientRequirements.map(variant => ({
+            label: variant.flavorName,
+            stock: calcVariantStock(variant.ingredients),
+        }));
+    }
+
+    // simpleProduct or fallback
+    return [{ label: 'Stock', stock: stock ?? 100 }];
+}
+// ──────────────────────────────────────────────────────────────
+
 function Inventory() {
 
     const navigate = useNavigate();
@@ -159,55 +195,74 @@ function Inventory() {
                     ) : (
                         displayedData.length > 0 ? (
                             <div className="inv-products-container">
-                                {displayedData.map((product) => (
-                                    <div key={product.productID} className="inv-product-card">
-                                        <div className="inv-product-image-wrap">
-                                            {product.imageURL ? (
-                                                <img src={product.imageURL} alt={product.productName} className="inv-product-image" />
-                                            ) : (
-                                                <img src={placeHolderImage} className="inv-product-image-placeholder" alt="Placeholder" />
-                                            )}
-                                        </div>
-                                        <div className="inv-product-card-content">
-                                            <h3>{product.productName}</h3>
-                                            <p className="inv-product-category">{product.category}</p>
-                                            <div className="inv-product-stock">
-                                                <strong>Stock:</strong> <span className="stock-value">{product.stock}</span>
+                                {displayedData.map((product) => {
+                                    const variantStocks = getVariantStocks(product);
+                                    const isSimple = product.productType === 'simpleProduct';
+
+                                    return (
+                                        <div key={product.productID} className="inv-product-card">
+                                            <div className="inv-product-image-wrap">
+                                                {product.imageURL ? (
+                                                    <img src={product.imageURL} alt={product.productName} className="inv-product-image" />
+                                                ) : (
+                                                    <img src={placeHolderImage} className="inv-product-image-placeholder" alt="Placeholder" />
+                                                )}
+                                            </div>
+                                            <div className="inv-product-card-content">
+                                                <h3>{product.productName}</h3>
+                                                <p className="inv-product-category">{product.category}</p>
+
+                                                {/* ── Stock display ── */}
+                                                {isSimple ? (
+                                                    <div className="inv-product-stock">
+                                                        <strong>Stock:</strong>{' '}
+                                                        <span className="stock-value">{variantStocks[0].stock}</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="inv-variant-stocks">
+                                                        {variantStocks.map(({ label, stock }) => (
+                                                            <div key={label} className="inv-variant-stock-row">
+                                                                <span className="inv-variant-label">{label}:</span>
+                                                                <span className="stock-value">{stock}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="inv-product-card-footer">
+                                                {isManager && (
+                                                    <>
+                                                        <button
+                                                            className="inv-update-button"
+                                                            onClick={() => navigate(`/inventory/update-product/${product.productID}`)}
+                                                        >
+                                                            Update
+                                                        </button>
+                                                        <button
+                                                            className="inv-delete-button"
+                                                            onClick={async () => {
+                                                                if (!window.confirm(`Delete "${product.productName}"? This cannot be undone.`)) return;
+                                                                try {
+                                                                    const res = await fetch(`/api/products/${product.productID}`, { method: 'DELETE' });
+                                                                    if (res.ok) {
+                                                                        setProductList(prev => prev.filter(p => p.productID !== product.productID));
+                                                                    } else {
+                                                                        alert('Failed to delete product.');
+                                                                    }
+                                                                } catch (err) {
+                                                                    console.error('Delete error:', err);
+                                                                    alert('An error occurred while deleting.');
+                                                                }
+                                                            }}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="inv-product-card-footer">
-                                            {isManager && (
-                                                <>
-                                                    <button
-                                                        className="inv-update-button"
-                                                        onClick={() => navigate(`/inventory/update-product/${product.productID}`)}
-                                                    >
-                                                        Update
-                                                    </button>
-                                                    <button
-                                                        className="inv-delete-button"
-                                                        onClick={async () => {
-                                                            if (!window.confirm(`Delete "${product.productName}"? This cannot be undone.`)) return;
-                                                            try {
-                                                                const res = await fetch(`/api/products/${product.productID}`, { method: 'DELETE' });
-                                                                if (res.ok) {
-                                                                    setProductList(prev => prev.filter(p => p.productID !== product.productID));
-                                                                } else {
-                                                                    alert('Failed to delete product.');
-                                                                }
-                                                            } catch (err) {
-                                                                console.error('Delete error:', err);
-                                                                alert('An error occurred while deleting.');
-                                                            }
-                                                        }}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="no-data">No products found for the selected category.</div>

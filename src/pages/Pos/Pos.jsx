@@ -17,6 +17,7 @@ export default function Pos() {
     removeFromCart, 
     updateQuantity, 
     toggleAddOn, 
+    clearCart,
     discountPercent, 
     setDiscountPercent,
     totals 
@@ -338,7 +339,16 @@ const handleAddToCart = (product, quantity, size) => {
             <div className="checkout-header">
               <h2>Checkout</h2>
               {cartItems.length > 0 && (
-                <span className="cart-count">{cartItems.length} items</span>
+                 <div className="checkout-header-right">
+                  <span className="cart-count">{cartItems.length} items</span>
+                  <button
+                    className="clear-cart-btn"
+                    onClick={() => { clearCart(); }}
+                    title="Clear cart"
+                  >
+                    Clear
+                  </button>
+                </div>
               )}
             </div>
 

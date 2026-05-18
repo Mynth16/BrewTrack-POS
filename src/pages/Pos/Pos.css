@@ -385,3 +385,25 @@
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }
+
+.checkout-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.clear-cart-btn {
+  padding: 0.25rem 0.65rem;
+  background-color: var(--danger);
+  color: var(--text-light);
+  border: none;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clear-cart-btn:hover {
+  background-color: #b71c1c;
+}
