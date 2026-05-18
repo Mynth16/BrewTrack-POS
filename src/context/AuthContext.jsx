@@ -7,6 +7,32 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [lastActivityTime, setLastActivityTime] = useState(Date.now());
+    const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    const WARNING_TIME = 29 * 60 * 1000; // 29 minutes (1 minute before timeout)
+
+    // Handle user activity - resets inactivity timer
+    const handleUserActivity = () => {
+        setLastActivityTime(Date.now());
+        setShowTimeoutWarning(false);
+    };
+
+    // Continue session - dismiss warning and reset timer
+    const continueSession = () => {
+        handleUserActivity();
+    };
+
+    // Auto-logout function
+    const autoLogout = () => {
+        console.warn('Session expired due to inactivity');
+        localStorage.removeItem('authToken');
+        setUser(null);
+        setToken(null);
+        setError(null);
+        setShowTimeoutWarning(false);
+    };
 
     // Initialize user from token on app load
     useEffect(() => {
@@ -37,6 +63,39 @@ export const AuthProvider = ({ children }) => {
 
         restoreSession();
     }, []);
+
+    // Set up inactivity timeout and activity listeners
+    useEffect(() => {
+        if (!user) return; // Only track inactivity when logged in
+
+        // Add activity listeners
+        document.addEventListener('mousedown', handleUserActivity);
+        document.addEventListener('keydown', handleUserActivity);
+
+        // Inactivity check interval
+        const checkInactivityInterval = setInterval(() => {
+            const timeSinceLastActivity = Date.now() - lastActivityTime;
+
+            // If past timeout, auto-logout
+            if (timeSinceLastActivity >= INACTIVITY_TIMEOUT) {
+                autoLogout();
+                clearInterval(checkInactivityInterval);
+                return;
+            }
+
+            // Show warning if approaching timeout
+            if (timeSinceLastActivity >= WARNING_TIME && !showTimeoutWarning) {
+                setShowTimeoutWarning(true);
+            }
+        }, 30 * 1000); // Check every 30 seconds
+
+        // Cleanup listeners and interval on unmount or logout
+        return () => {
+            document.removeEventListener('mousedown', handleUserActivity);
+            document.removeEventListener('keydown', handleUserActivity);
+            clearInterval(checkInactivityInterval);
+        };
+    }, [user, lastActivityTime, showTimeoutWarning]);
 
     const login = async (username, password) => {
         setError(null);
@@ -94,6 +153,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setError(null);
+        setShowTimeoutWarning(false);
+        setLastActivityTime(Date.now());
     };
 
     const isAuthenticated = () => {
@@ -101,7 +162,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, error, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, error, loading, showTimeoutWarning, continueSession }}>
             {children}
         </AuthContext.Provider>
     );

@@ -56,6 +56,19 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
+function requireManager(req, res, next) {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ success: false, error: 'No token provided' });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        if (decoded.role !== 'Manager') return res.status(403).json({ success: false, error: 'Manager only' });
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+}
+
 function getIngredientStockCapacity(quantityRequired, stockQuantity) {
     if (!quantityRequired || Number(quantityRequired) <= 0) return Infinity;
     const stock = Number(stockQuantity) || 0;
@@ -380,7 +393,7 @@ router.get('/images/:category', (req, res) => {
     }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireManager, async (req, res) => {
     const { productName, category, productType, price, ingredients, addOns, priceAndSize, drinkIngredients, flavors, flavorIngredients } = req.body;
 
     try {
@@ -497,7 +510,7 @@ router.get('/:productId', async (req, res) => {
     }
 });
 
-router.put('/:productId', async (req, res) => {
+router.put('/:productId', requireManager, async (req, res) => {
     const { productId } = req.params;
     const { productName, category, imageURL, price, ingredients, addOns, sizes, flavors } = req.body;
 
@@ -539,7 +552,7 @@ router.put('/:productId', async (req, res) => {
     }
 });
 
-router.post('/:productId/image', upload.single('image'), async (req, res) => {
+router.post('/:productId/image', requireManager, upload.single('image'), async (req, res) => {
     try {
         const { productId } = req.params;
         const file = req.file;
@@ -579,7 +592,7 @@ router.post('/:productId/image', upload.single('image'), async (req, res) => {
     }
 });
 
-router.delete('/:productId', async (req, res) => {
+router.delete('/:productId', requireManager, async (req, res) => {
     try {
         const { productId } = req.params;
         const product = await getProductByID(productId);

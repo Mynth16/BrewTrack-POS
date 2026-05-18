@@ -45,7 +45,8 @@ CREATE TABLE product (
     productName  VARCHAR(100) NOT NULL,
     productType  ENUM('simpleProduct', 'drink', 'flavoredItem') NOT NULL,
     category     VARCHAR(50),
-    imageURL     VARCHAR(255)
+    imageURL     VARCHAR(255),
+    isActive     TINYINT(1)   DEFAULT 1
 );
 
 -- For plain products with no size or flavor
