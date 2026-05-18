@@ -22,7 +22,7 @@ function Navigation() {
         { label: 'Point of Sale', path: '/pos', icon: MdShoppingCart },
         { label: 'Inventory', path: '/inventory', icon: MdInventory2 },
         { label: 'Reports', path: '/reports', icon: MdAssessment },
-        { label: 'User Manager', path: '/user-manager', icon: MdManageAccounts },
+        ...(user?.role === 'Manager' ? [{ label: 'User Manager', path: '/user-manager', icon: MdManageAccounts }] : []),
     ];
 
     return (
