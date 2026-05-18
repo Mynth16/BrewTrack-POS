@@ -190,7 +190,6 @@
   background: transparent;
   border: none;
   outline: none;
-  -moz-appearance: textfield;
 }
 
 .qty-input::-webkit-outer-spin-button,

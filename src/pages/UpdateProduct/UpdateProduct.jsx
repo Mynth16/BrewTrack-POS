@@ -31,7 +31,6 @@ function UpdateProduct() {
 
         // flavoredItem
         flavors: [],
-        flavorIngredients: [{ ingredientID: '', quantities: {}}],
         
         // all
         addOns: [{ addOnID: '', quantityRequired: '' }],
@@ -126,6 +125,12 @@ function UpdateProduct() {
                         flavoredItemID: f.flavoredItemID,
                         flavorName: f.flavorName,
                         price: f.price,
+                        ingredients: f.ingredients?.length > 0
+                            ? f.ingredients.map(i => ({
+                                ingredientID: String(i.ingredientID),
+                                quantityRequired: String(i.quantityRequired),
+                            }))
+                            : [{ ingredientID: '', quantityRequired: '' }],
                     })) || [],
                     flavorIngredients: buildVariantIngredients(p.flavors, 'flavoredItemID'),
                     addOns: p.addOns?.length > 0
@@ -297,15 +302,14 @@ function UpdateProduct() {
                     flavoredItemID: flavor.flavoredItemID,
                     flavorName: flavor.flavorName,
                     price: Number(flavor.price),
-                    ingredients: productForm.flavorIngredients
-                        .filter(row => row.ingredientID !== '' && row.quantities?.[flavor.flavoredItemID] !== '')
-                        .map(row => ({
-                            ingredientID: Number(row.ingredientID),
-                            quantityRequired: Number(row.quantities[flavor.flavoredItemID])
+                    ingredients: flavor.ingredients
+                        .filter(i => i.ingredientID !== '' && i.quantityRequired !== '')
+                        .map(i => ({
+                            ingredientID: Number(i.ingredientID),
+                            quantityRequired: Number(i.quantityRequired),
                         }))
                 }));
             }
-
             const res = await fetch(`/api/products/${productID}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -358,11 +362,16 @@ function UpdateProduct() {
         }));
     };
 
-    const handleFlavorIngredientChange = (index, field) => (event) => {
+    const handleFlavorIngredientChange = (flavorIndex, ingredientIndex, field) => (event) => {
         setProductForm(prev => ({
             ...prev,
-            flavorIngredients: prev.flavorIngredients.map((row, i) =>
-                i === index ? { ...row, [field]: event.target.value } : row
+            flavors: prev.flavors.map((flavor, fi) =>
+                fi !== flavorIndex ? flavor : {
+                    ...flavor,
+                    ingredients: flavor.ingredients.map((row, ii) =>
+                        ii !== ingredientIndex ? row : { ...row, [field]: event.target.value }
+                    )
+                }
             )
         }));
     };
@@ -379,23 +388,33 @@ function UpdateProduct() {
         }));
     };
 
-    const handleAddFlavorIngredientRow = () => {
+    const handleAddFlavorIngredientRow = (flavorIndex) => {
         setProductForm(prev => ({
             ...prev,
-            flavorIngredients: [...prev.flavorIngredients, { ingredientID: '', quantities: {} }]
+            flavors: prev.flavors.map((flavor, fi) =>
+                fi !== flavorIndex ? flavor : {
+                    ...flavor,
+                    ingredients: [...flavor.ingredients, { ingredientID: '', quantityRequired: '' }]
+                }
+            )
         }));
     };
 
-    const handleRemoveFlavorIngredientRow = (index) => {
+    const handleRemoveFlavorIngredientRow = (flavorIndex, ingredientIndex) => {
         setProductForm(prev => ({
             ...prev,
-            flavorIngredients: prev.flavorIngredients.filter((_, i) => i !== index)
+            flavors: prev.flavors.map((flavor, fi) =>
+                fi !== flavorIndex ? flavor : {
+                    ...flavor,
+                    ingredients: flavor.ingredients.filter((_, ii) => ii !== ingredientIndex)
+                }
+            )
         }));
     };
 
-    const getAvailableFlavorIngredients = (currentIndex) => {
-        const selectedIDs = productForm.flavorIngredients
-            .map((row, i) => i !== currentIndex ? row.ingredientID : null)
+    const getAvailableFlavorIngredients = (flavorIndex, currentIngredientIndex) => {
+        const selectedIDs = productForm.flavors[flavorIndex]?.ingredients
+            .map((row, i) => i !== currentIngredientIndex ? row.ingredientID : null)
             .filter(id => id !== null && id !== '');
         return ingredientList.filter(ing => !selectedIDs.includes(String(ing.ingredientID)));
     };
@@ -605,35 +624,10 @@ function UpdateProduct() {
                     {/* FLAVORED ITEM */}
                     {productForm.productType === 'flavoredItem' && (
                         <div className="more-questions-container">
-                            <button type="button" className="addAddOnButton" onClick={handleAddFlavorIngredientRow}>
-                                Add Ingredient
-                            </button>
-
-                            {productForm.flavorIngredients.map((row, index) => (
-                                <div key={index} className="form-question">
-                                    <label>Ingredient:</label>
-                                    <div className="form-answer">
-                                        <select value={row.ingredientID} onChange={handleFlavorIngredientChange(index, 'ingredientID')}>
-                                            <option value="">Select Ingredient</option>
-                                            {getAvailableFlavorIngredients(index).map(ing => (
-                                                <option key={ing.ingredientID} value={ing.ingredientID}>
-                                                    {ing.ingredientName}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {productForm.flavorIngredients.length > 1 && (
-                                            <button type="button" onClick={() => handleRemoveFlavorIngredientRow(index)}>
-                                                Remove
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-
                             {productForm.flavors.map((flavor, flavorIndex) => (
-                                <>
+                                <div key={flavor.flavoredItemID}>
                                     <hr />
-                                    <div key={flavor.flavoredItemID} className="size-block">
+                                    <div className="size-block">
                                         <div className="form-question">
                                             <label>Flavor Name and Price: </label>
                                             <div className="form-answer">
@@ -653,25 +647,52 @@ function UpdateProduct() {
                                                 />
                                             </div>
                                         </div>
-                                        
-                                        <label>Enter Quantity for the following ingredients: </label>
-                                        {productForm.flavorIngredients.map((row, ingredientIndex) => (
+
+                                        <label>Ingredients for {flavor.flavorName || 'this flavor'}:</label>
+                                        <button
+                                            type="button"
+                                            className="addAddOnButton"
+                                            onClick={() => handleAddFlavorIngredientRow(flavorIndex)}
+                                        >
+                                            Add Ingredient
+                                        </button>
+
+                                        {flavor.ingredients.map((row, ingredientIndex) => (
                                             <div key={ingredientIndex} className="form-question">
-                                                <label>{getIngredientName(row.ingredientID) || 'Ingredient qty'}:</label>
+                                                <label>Ingredient:</label>
                                                 <div className="form-answer">
+                                                    <select
+                                                        value={row.ingredientID}
+                                                        onChange={handleFlavorIngredientChange(flavorIndex, ingredientIndex, 'ingredientID')}
+                                                    >
+                                                        <option value="">Select Ingredient</option>
+                                                        {getAvailableFlavorIngredients(flavorIndex, ingredientIndex).map(ing => (
+                                                            <option key={ing.ingredientID} value={ing.ingredientID}>
+                                                                {ing.ingredientName}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                     <input
                                                         type="number"
                                                         min="0"
                                                         step="0.01"
-                                                        placeholder={`Qty for ${flavor.flavorName}`}
-                                                        value={row.quantities?.[flavor.flavoredItemID] || ''}
-                                                        onChange={handleFlavorIngredientQuantityChange(ingredientIndex, flavor.flavoredItemID)}
+                                                        placeholder="Quantity"
+                                                        value={row.quantityRequired}
+                                                        onChange={handleFlavorIngredientChange(flavorIndex, ingredientIndex, 'quantityRequired')}
                                                     />
+                                                    {flavor.ingredients.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFlavorIngredientRow(flavorIndex, ingredientIndex)}
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                </>
+                                </div>
                             ))}
                         </div>
                     )}

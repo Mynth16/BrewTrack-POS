@@ -1,151 +1,398 @@
+:root {
+    --primary-brown: #4A3728;
+    --secondary-brown: #6B5344;
+    --light-brown: #8B7355;
+    --cream-bg: #F5EFE7;
+    --text-dark: #2C1810;
+    --text-light: #FFFFFF;
+    --accent-green: #7CB342;
+    --accent-gold: #D4A574;
+    --border-color: #D4C5B9;
+    --danger: #D32F2F;
+}
+
+/* ── Outer wrapper ── */
 .restock-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+    min-height: 100vh;
+    background-color: var(--cream-bg);
+    padding: 2rem;
 }
 
-.restock-wrapper{
-  width: 100%;
-  max-width: 1200px;
-  background: linear-gradient(to top, #000000, #43341F);
-  border-radius: 12px;
-  padding: 20px;
-  color: white;
-  border: 1px solid black;
+.restock-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
+/* ── Header ── */
 .restock-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--secondary-brown);
 }
 
-.restock-header h2 { margin:0; }
+.restock-header h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-brown);
+    margin: 0;
+}
+
+.restock-actions {
+    display: flex;
+    gap: 0.75rem;
+}
 
 .restock-actions button {
-  margin-left: 8px;
-  padding: 8px 12px;
-  background: linear-gradient(to top, #43341F, #A9834E);
-  color: white;
-  border: 1px solid white;
-  border-radius: 8px;
-  cursor: pointer;
+    padding: 0.6rem 1.2rem;
+    background-color: var(--accent-gold);
+    color: var(--text-dark);
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
 }
 
+.restock-actions button:hover:not(:disabled) {
+    background-color: #c39366;
+}
+
+.restock-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Submit button distinct color */
+.restock-actions button:nth-child(2) {
+    background-color: var(--accent-green);
+    color: var(--text-light);
+}
+
+.restock-actions button:nth-child(2):hover:not(:disabled) {
+    background-color: #5a9e2f;
+}
+
+/* ── Main layout ── */
 .restock-main {
-  display:flex;
-  gap: 16px;
-  margin-top: 12px;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
 }
 
-.restock-left { 
-    display: flex;
+/* ── Left: ingredient table ── */
+.restock-left {
     flex: 1;
-    overflow-y: auto;
-    max-height: 500px;
-    max-width: 100%;
+    background-color: var(--primary-brown);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
 }
 
 .restock-table {
-  width:100%;
-  border-collapse: collapse;
-  table-layout: fixed;  
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-light);
 }
 
-.restock-table th, .restock-table td {
-  padding: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  text-align:left;
+.restock-table th,
+.restock-table td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.restock-table input {
-  width: 100%;
-  padding:6px;
-  border-radius:6px;
-  background: rgba(255,255,255,0.06);
-  color:white;
-  border: none;
+.restock-table th {
+    font-weight: bold;
+    font-size: 0.9rem;
+    background-color: var(--secondary-brown);
+    color: var(--text-light);
+    position: sticky;
+    top: 0;
 }
 
+.restock-table tbody tr:nth-child(odd) {
+    background-color: var(--primary-brown);
+}
+
+.restock-table tbody tr:nth-child(even) {
+    background-color: var(--secondary-brown);
+}
+
+.restock-table tbody tr:hover {
+    background-color: var(--light-brown);
+    transition: background-color 0.2s ease;
+}
+
+.restock-table td.qty-to-add,
+.restock-table th.qty-to-add {
+    text-align: center;
+}
+
+.restock-table input[type='number'] {
+    width: 90px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+    font-size: 0.9rem;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.restock-table input[type='number']:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+/* ── Right: sidebar ── */
 .restock-sidebar {
-  width: 360px;
-  flex: 0 0 360px;
+    width: 320px;
+    flex-shrink: 0;
 }
 
 .template-manager {
-  background: rgba(255,255,255,0.03);
-  padding: 12px;
-  border-radius: 8px;
+    background-color: var(--primary-brown);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    color: var(--text-light);
 }
 
+.template-manager h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0 0 1rem 0;
+    color: var(--text-light);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 0.75rem;
+}
+
+/* ── Template list ── */
 .template-list {
-  max-height: 320px;
-  overflow: auto;
-  margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    max-height: 260px;
+    overflow-y: auto;
 }
 
 .template-row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.02);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+    gap: 0.5rem;
 }
 
-.template-row.selected { background: rgba(255,255,255,0.02); }
+.template-row.selected {
+    border-color: var(--accent-gold);
+    background-color: rgba(212, 165, 116, 0.15);
+}
 
-.template-info strong { display:block; color:#fff; }
-.template-meta { font-size:12px; color:#ccc; }
+.template-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.template-info strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.template-meta {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.template-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
 
 .template-actions button {
-  margin-left:6px;
-  padding:6px 8px;
-  border-radius:6px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.04);
-  color: white;
-  cursor:pointer;
+    padding: 0.35rem 0.65rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
 }
 
-.no-templates { color:#ccc; padding:8px; }
+.template-actions button:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+}
 
+/* Delete button */
+.template-actions button:last-child {
+    background-color: rgba(211, 47, 47, 0.4);
+}
+
+.template-actions button:last-child:hover {
+    background-color: var(--danger);
+}
+
+.no-templates {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+    padding: 1rem 0;
+}
+
+/* ── Template form ── */
 .template-form {
-  margin-top:12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 1rem;
 }
 
-.template-form input, .template-form textarea {
-  padding:8px;
-  border-radius:6px;
-  background: rgba(255,255,255,0.04);
-  color:white;
-  border:none;
+.template-form h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-gold);
+    margin: 0 0 0.25rem 0;
 }
 
-.template-form textarea { min-height:60px; resize:vertical; }
+.template-form input,
+.template-form textarea {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+    font-size: 0.88rem;
+    transition: border-color 0.2s;
+    resize: vertical;
+}
+
+.template-form input:focus,
+.template-form textarea:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.template-form input::placeholder,
+.template-form textarea::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
 
 .template-form-actions {
-  display:flex;
-  gap:8px;
-  margin-top:6px;
+    display: flex;
+    gap: 0.5rem;
 }
 
-.template-form button {
-  padding:8px 12px;
-  border-radius:6px;
-  background: linear-gradient(to top, #43341F, #A9834E);
-  color:white;
-  border:1px solid white;
-  cursor:pointer;
+.template-form-actions button {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background-color: var(--accent-green);
+    color: var(--text-light);
 }
 
+.template-form-actions button:hover:not(:disabled) {
+    background-color: #5a9e2f;
+}
+
+.template-form-actions button:last-child {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-light);
+}
+
+.template-form-actions button:last-child:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+}
+
+.template-form-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Message ── */
 .restock-message {
-  margin-top:10px;
-  padding:8px;
-  background: rgba(0,0,0,0.4);
-  border-radius:6px;
-  color: #fff;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    background-color: rgba(124, 179, 66, 0.2);
+    color: var(--accent-green);
+    border: 1px solid rgba(124, 179, 66, 0.4);
+    text-align: center;
+}
+
+/* ── Scrollbar ── */
+.template-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.template-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.template-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .restock-main {
+        flex-direction: column;
+    }
+
+    .restock-sidebar {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .restock-container {
+        padding: 1rem;
+        margin-left: 0;
+    }
+
+    .restock-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .restock-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .restock-actions button {
+        flex: 1;
+    }
 }

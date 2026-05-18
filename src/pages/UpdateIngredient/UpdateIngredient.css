@@ -1,80 +1,172 @@
-.update-ingredient-container {
-    display: flex;
-    height: 100vh;
+/* ── UpdateIngredient.css ── */
+/* All classes prefixed with .ui- (update-ingredient) to avoid global clashes */
 
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-
-    color: white;
+.ui-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cream-bg);
 }
 
-.back-button {
-    background: linear-gradient(to top, #43341F, #A9834E);
-    color: white;
-    border: 1px solid white;
-    border-radius: 8px;
+.ui-screen {
+  padding: 2rem;
+  flex: 1;
 }
 
-.back-button:hover {
-    background: linear-gradient(to top, #352917, #8E6F41);
+/* ── Header bar ── */
+.ui-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--secondary-brown);
+  width: 90vw;
+  margin-left: calc(-50vw + 55%);
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
-.update-ingredient-container form {
-    display: flex;
+.ui-header h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--primary-brown);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ── Back button ── */
+.ui-back-btn {
+  padding: 0.65rem 1.25rem;
+  background-color: var(--accent-gold);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.ui-back-btn:hover {
+  background-color: #c39366;
+}
+
+/* ── Form card ── */
+.ui-card {
+  background-color: var(--primary-brown);
+  color: var(--text-light);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* ── Field row ── */
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.ui-field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.02em;
+}
+
+.ui-field input {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background-color: var(--secondary-brown);
+  color: var(--text-light);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.ui-field input::placeholder {
+  color: #c0ab9e;
+}
+
+.ui-field input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+/* ── Submit button ── */
+.ui-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.ui-submit-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--accent-gold);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.ui-submit-btn:hover {
+  background-color: #c39366;
+}
+
+/* ── Error message ── */
+.ui-error {
+  background-color: #f8d7da;
+  color: var(--danger);
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  border: 1px solid #f5c6cb;
+  font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .ui-wrapper {
+    margin-left: 0;
+  }
+
+  .ui-screen {
+    padding: 1rem;
+  }
+
+  .ui-header {
     flex-direction: column;
-    background: linear-gradient(to top, #000000, #43341F);
-    width: 40%;
-    min-width: 400px;
-    
+    align-items: flex-start;
+    gap: 1rem;
+    margin-left: calc(-50vw + 50%);
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 
-    border: 1px solid black;
-    border-radius: 12px;
-    padding: 40px;
-}
+  .ui-header h1 {
+    font-size: 1.8rem;
+  }
 
-.update-ingredient-header {
-    display: flex;
-    flex-direction: row;
+  .ui-card {
+    padding: 1.25rem;
+  }
 
-    padding-bottom: 10px; 
-    justify-content: space-between;
-}
+  .ui-submit-row {
+    justify-content: stretch;
+  }
 
-.update-ingredient-container form section {
-    display: flex;
-    flex-direction: column;
+  .ui-submit-btn {
     width: 100%;
-}
-
-.form-question {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-
-    justify-content: space-between;
-    padding-top: 10px;
-}
-
-.form-question input {
-    width: 30%;
-    box-sizing: border-box;
-
-    border-radius: 6px;
-    border: transparent;
-}
-
-.submit-button-container {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    padding-top: 15px;
-}
-
-.submit-button {
-    background: linear-gradient(to top, #43341F, #A9834E);
-    color: white;
-    border: 1px solid white;
-    border-radius: 8px;
-    padding: 8px;
+  }
 }

@@ -84,66 +84,94 @@ function UpdateProductIngredient() {
     }
 };
 
-    return (
-        <div className = "update-ingredient-container">
-            <form>
-                <div className = "update-ingredient-header">
+   return (
+        <div className="ui-wrapper">
+            <div className="ui-screen">
+ 
+                {/* ── Header ── */}
+                <div className="ui-header">
                     <h1>Update Ingredient</h1>
-                    <button type = "button" className = "back-button" onClick = {() => navigate('/inventory')}>
+                    <button
+                        type="button"
+                        className="ui-back-btn"
+                        onClick={() => navigate('/inventory')}
+                    >
                         Back
                     </button>
                 </div>
-                <hr />
-                <section>
-                    <div className = "form-question">
-                        <label>Enter New Ingredient Name: </label>
-                        <input
-                        type = "text" 
-                        placeholder = "Enter New Ingredient Name: " 
-                        value = {formState.ingredientName} 
-                        onChange = {handleChange('ingredientName')} required/>
-                    </div>
-                    <div className = "form-question">
-                        <label>Enter New Stock Quantity: </label>
-                        <input
-                        type = "number"
-                        placeholder = "Enter New Stock Quantity: "
-                        value = {formState.stockQuantity}
-                        onChange = {handleChange('stockQuantity')} required/>
-                    </div>
-                    <div className = "form-question">
-                        <label>Enter Minimum Stock Level (For Alerts): </label>
-                        <input
-                        type = "number"
-                        placeholder = "Enter New Minimum Stock Level: "
-                        value = {formState.minStockLevel}
-                        onChange = {handleChange('minStockLevel')}/>
-                    </div>
-                    <div className = "form-question">
-                        <label>Enter New Unit: </label>
-                        <input 
-                        type = "text"
-                        placeholder = "Enter New Unit"
-                        value = {formState.unit}
-                        onChange = {handleChange('unit')} required/>
-                    </div>
-                    <div className = "form-question">
-                        <label>Enter New Expiration Date: </label>
-                        <input 
-                        type = "date"
-                        placeholder = "Enter New Expiration Date"
-                        value = {formState.expiryDate}
-                        onChange = {handleChange('expiryDate')}/>
-                    </div>
-                    <div className = "submit-button-container">
-                        <button type = "submit" onClick = {handleSubmit} className = "submit-button">
-                            Update Ingredient
-                        </button>
-                    </div>
-                </section>
-            </form>
+ 
+                {/* ── Form card ── */}
+                <div className="ui-card">
+                    <form onSubmit={handleSubmit}>
+ 
+                        {errorMessage && (
+                            <div className="ui-error">{errorMessage}</div>
+                        )}
+ 
+                        <div className="ui-field">
+                            <label>Ingredient Name</label>
+                            <input
+                                type="text"
+                                placeholder="Enter ingredient name"
+                                value={formState.ingredientName}
+                                onChange={handleChange('ingredientName')}
+                                required
+                            />
+                        </div>
+ 
+                        <div className="ui-field">
+                            <label>Stock Quantity</label>
+                            <input
+                                type="number"
+                                placeholder="Enter stock quantity"
+                                value={formState.stockQuantity}
+                                onChange={handleChange('stockQuantity')}
+                                required
+                            />
+                        </div>
+ 
+                        <div className="ui-field">
+                            <label>Minimum Stock Level (for alerts)</label>
+                            <input
+                                type="number"
+                                placeholder="Enter minimum stock level"
+                                value={formState.minStockLevel}
+                                onChange={handleChange('minStockLevel')}
+                            />
+                        </div>
+ 
+                        <div className="ui-field">
+                            <label>Unit</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. kg, L, pcs"
+                                value={formState.unit}
+                                onChange={handleChange('unit')}
+                                required
+                            />
+                        </div>
+ 
+                        <div className="ui-field">
+                            <label>Expiration Date</label>
+                            <input
+                                type="date"
+                                value={formState.expiryDate}
+                                onChange={handleChange('expiryDate')}
+                            />
+                        </div>
+ 
+                        <div className="ui-submit-row">
+                            <button type="submit" className="ui-submit-btn">
+                                Update Ingredient
+                            </button>
+                        </div>
+ 
+                    </form>
+                </div>
+ 
+            </div>
         </div>
     );
 }
-
+ 
 export default UpdateProductIngredient;
