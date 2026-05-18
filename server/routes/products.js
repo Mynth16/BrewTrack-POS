@@ -33,6 +33,7 @@ import {
   replaceFlavoredItemIngredients,
   updateDrinkVariant,
   updateFlavoredItemVariant,
+  deactivateProduct,
 } from '../db.js';
 
 const router = express.Router();
@@ -98,6 +99,7 @@ async function transformProduct(dbProduct) {
     let sizes = [];
     let addOns = [];
     let stock = 100;
+    let ingredientRequirements = [];
 
     try {
         // Fetch variants (sizes/flavors) for this product
@@ -137,12 +139,54 @@ async function transformProduct(dbProduct) {
             const rows = await getProductIngredientsWithStockByProductID(productID);
             stock = getStockFromRows(rows);
 
+                ingredientRequirements = rows.map(r => ({
+                ingredientID: r.ingredientID,
+                quantityRequired: Number(r.quantityRequired),
+                stockQuantity: Number(r.stockQuantity),
+            }));
+
         } else if (productType === 'drink') {
             const rows = await getDrinkIngredientsWithStockByProductID(productID);
             stock = getVariantStock(rows, 'drinkID');
+
+            const drinkMap = {};
+            rows.forEach(row => {
+                if (!row.drinkID || row.ingredientID == null) return;
+                if (!drinkMap[row.drinkID]) {
+                    drinkMap[row.drinkID] = {
+                        drinkID: row.drinkID,
+                        size: row.size,
+                        ingredients: []
+                    };
+                }
+                drinkMap[row.drinkID].ingredients.push({
+                    ingredientID: row.ingredientID,
+                    quantityRequired: Number(row.quantityRequired),
+                    stockQuantity: Number(row.stockQuantity),
+                });
+            });
+            ingredientRequirements = Object.values(drinkMap);
         } else if (productType === 'flavoredItem') {
             const rows = await getFlavoredItemIngredientsWithStockByProductID(productID);
             stock = getVariantStock(rows, 'flavoredItemID');
+
+            const flavorMap = {};
+            rows.forEach(row => {
+                if (!row.flavoredItemID || row.ingredientID == null) return;
+                if (!flavorMap[row.flavoredItemID]) {
+                    flavorMap[row.flavoredItemID] = {
+                        flavoredItemID: row.flavoredItemID,
+                        flavorName: row.flavorName,
+                        ingredients: []
+                    };
+                }
+                flavorMap[row.flavoredItemID].ingredients.push({
+                    ingredientID: row.ingredientID,
+                    quantityRequired: Number(row.quantityRequired),
+                    stockQuantity: Number(row.stockQuantity),
+                });
+            });
+            ingredientRequirements = Object.values(flavorMap);
         }
     } catch (error) {
         console.error(`Error transforming product ${productID}:`, error);
@@ -166,6 +210,7 @@ async function transformProduct(dbProduct) {
         sizes,
         addOns,
         stock, //NOTE: CHANGED THIS FROM stock: 100
+        ingredientRequirements,
         image: imageURL || '/src/products/default.png',
         imageURL,
         productType,
@@ -531,6 +576,26 @@ router.post('/:productId/image', upload.single('image'), async (req, res) => {
     } catch (error) {
         console.error('Error uploading image:', error);
         res.status(500).json({ success: false, error: 'Failed to upload image' });
+    }
+});
+
+router.delete('/:productId', async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const product = await getProductByID(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+
+        const success = await deactivateProduct(productId);
+        if (!success) {
+            return res.status(500).json({ success: false, error: 'Failed to deactivate product' });
+        }
+
+        res.json({ success: true, message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Failed to delete product:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete product' });
     }
 });
 

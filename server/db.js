@@ -1072,4 +1072,17 @@ export async function getCashiers() {
     }
 }
 
+export async function deactivateProduct(productID) {
+    try {
+        const [result] = await pool.query(
+            `UPDATE product SET isActive = 0 WHERE productID = ?`,
+            [productID]
+        );
+        return result.affectedRows > 0;
+    } catch (error) {
+        console.error('Failed to deactivate product:', error);
+        throw error;
+    }
+}
+
 export default pool;

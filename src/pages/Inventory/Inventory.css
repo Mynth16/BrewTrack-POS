@@ -1,135 +1,200 @@
-* {
-    margin: 0;
+/* Color Scheme — matches ReportScreen */
+:root {
+  --primary-brown: #4A3728;
+  --secondary-brown: #6B5344;
+  --light-brown: #8B7355;
+  --cream-bg: #F5EFE7;
+  --text-dark: #2C1810;
+  --text-light: #FFFFFF;
+  --accent-green: #7CB342;
+  --accent-gold: #D4A574;
+  --border-color: #D4C5B9;
+  --danger: #D32F2F;
 }
 
+/* ── Outer wrapper ── */
 .inventory-container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: row;
-    margin-left: 80px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin-left: 80px;
 }
 
-/* temporary commented out muna
-@media (max-width: 768px) {
-    .inventory-container {
-        margin-left: 60px;
-    }
-}
-    */
-
-section {
-    height: 100vh;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: flex-start;
+/* ── Main content area ── */
+.inventory-screen {
+  padding: 2rem;
+  background-color: var(--cream-bg);
+  flex: 1;
 }
 
-.search-and-filters {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+/* ── Page header row (title + controls) ── */
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--secondary-brown);
+  width: 90vw;
+  margin-left: calc(-50vw + 55%);
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
-.search-and-filters button {
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
-    background: rgba(255, 255, 255, 0.08);
-    cursor: pointer;
-    transition: background 0.15s;
+.inventory-header h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--primary-brown);
+  margin: 0;
+  white-space: nowrap;
 }
 
-.search-and-filters button:hover {
-    background: rgba(255, 255, 255, 0.18);
+/* ── Filters / controls bar ── */
+.inventory-controls {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+  flex-wrap: nowrap;
 }
 
-.inventory-content {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 20px;
-    overflow: hidden;
+.control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.inventory-list {
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-    min-height: 80vh;
-    max-height: calc(100vh - 65px);
-    color: white;
-    overflow-y: auto;
-    border-radius: 8px;
-    background: linear-gradient(to top, #000000, #43341F);
-    box-sizing: border-box;
+.control-item label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--text-dark);
 }
 
-.inventory-list form {
-    padding: 20px 20px 10px 20px;
-    border-radius: 8px;
-}
-
-.inv-search-bar {
-    margin-right: 10px;
-    border-radius: 4px;
-    padding: 4px 8px;
-}
-
+.inv-search-bar,
 .inv-filter {
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 4px;
-    padding: 4px 8px;
-    box-sizing: border-box;
-    color: white;
-    background: linear-gradient(to top, #43341F, #A9834E);
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background-color: var(--cream-bg);
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
 
-select option {
-    color: black;
+.inv-search-bar:focus,
+.inv-filter:focus {
+  outline: none;
+  border-color: var(--light-brown);
 }
 
-table {
-    border-collapse: collapse;
-    margin: 10px;
-}
-
-table td, table th {
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 10px;
-    text-align: center;
-}
-
+/* ── Manager action buttons ── */
 .extra-buttons {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
 }
 
-/* PRODUCT CARDS */
+.extra-buttons button {
+  padding: 0.75rem 1.1rem;
+  background-color: var(--accent-gold);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
 
+.extra-buttons button:hover {
+  background-color: #c39366;
+}
+
+/* ── Table container (dark card) ── */
+.inventory-table-container {
+  background-color: var(--primary-brown);
+  color: var(--text-light);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* ── Ingredient table ── */
+.inventory-table {
+  width: 98%;
+  border-collapse: collapse;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.inventory-table th {
+  font-weight: bold;
+  font-size: 1rem;
+  background-color: var(--secondary-brown);
+  position: sticky;
+  top: 0;
+}
+
+.inventory-table tbody tr:nth-child(odd) {
+  background-color: var(--primary-brown);
+}
+
+.inventory-table tbody tr:nth-child(even) {
+  background-color: var(--secondary-brown);
+}
+
+.inventory-table tbody tr:hover {
+  background-color: var(--light-brown);
+  transition: background-color 0.2s ease;
+}
+
+/* ── Update button (inside table) ── */
+.inv-update-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--accent-gold);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.inv-update-button:hover {
+  background-color: #c39366;
+}
+
+/* ── Product card grid ── */
 .inv-products-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    width: 100%;
-    padding: 16px;
-    box-sizing: border-box;
-    overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  width: 100%;
 }
 
 .inv-product-card {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(160deg, #A9834E, #43341F);
+    background: linear-gradient(160deg, var(--secondary-brown), var(--primary-brown));
     min-height: 280px;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 14px;
     overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inv-product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 .inv-product-image-wrap {
@@ -143,77 +208,154 @@ table td, table th {
 }
 
 .inv-product-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .inv-product-image-placeholder {
-    width: 48px;
-    height: 48px;
-    opacity: 0.3;
-    object-fit: contain;
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
+  object-fit: contain;
 }
 
 .inv-product-card-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;                         /* pushes footer to bottom */
-    padding: 12px 14px 4px;
-    gap: 3px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 12px 14px 4px;
+  gap: 3px;
 }
 
 .inv-product-card-content h3 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #fff;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .inv-product-category {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.55);
-    margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
 }
 
 .inv-product-stock {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-    font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
 }
 
 .inv-product-stock strong {
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
 }
 
 .stock-value {
-    font-weight: 600;
-    color: #fff;
+  font-weight: 600;
+  color: #fff;
 }
 
 .inv-product-card-footer {
-    padding: 10px 14px 14px;
+    display: flex;
+    gap: 5%;
+  padding: 10px 14px 14px;
 }
 
-.inv-update-button {
+.inv-product-card-footer button {
     width: 100%;
     padding: 7px 0;
-    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     color: #fff;
     font-size: 13px;
     font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s;
+    background-color: transparent;
 }
 
-.inv-update-button:hover {
-    background: rgba(255, 255, 255, 0.18);
+.inv-product-card-footer button:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Empty state ── */
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #d4c8be;
+    font-size: 1.1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .inventory-header {
+        flex-wrap: wrap;
+  }
+
+.inventory-controls {
+    gap: 1rem;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+.control-item {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .inventory-screen {
+    padding: 1rem;
+  }
+
+  .inventory-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-left: calc(-50vw + 50%);
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .inventory-header h1 {
+    font-size: 1.8rem;
+    width: 100%;
+  }
+
+  .inventory-controls {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .control-item {
+    width: 100%;
+  }
+
+  .extra-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .extra-buttons button {
+    width: 100%;
+  }
+
+  .inventory-table-container {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .inventory-table th,
+  .inventory-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
 }

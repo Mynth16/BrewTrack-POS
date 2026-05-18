@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import './CartItemRow.css';
 
-export default function CartItemRow({ item, onRemove, onUpdateQty, onToggleAddOn, availableAddOns, showAddOnsExpandable }) {
+export default function CartItemRow({ item, onRemove, onUpdateQty, onToggleAddOn, availableAddOns, showAddOnsExpandable, maxQty}) {
   const [expandAddOns, setExpandAddOns] = useState(false);
   const lineTotal = (item.price * item.quantity) + (item.addOns.reduce((sum, a) => sum + (a.price * item.quantity), 0));
+  const  atMaxStock = item.quantity >= maxQty;
 
   return (
     <div className="cart-item">
@@ -15,11 +16,31 @@ export default function CartItemRow({ item, onRemove, onUpdateQty, onToggleAddOn
           <div className="cart-item-price">
             ₱{item.price.toFixed(2)} each
           </div>
+          {atMaxStock && (
+            <div className="cart-item-stock-warning">
+              Max stock reached (row cap) ({maxQty})
+            </div>
+          )}
         </div>
         <div className="cart-item-quantity">
-          <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>-</button>
-          <span className="qty-value">{item.quantity}</span>
-          <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity + 1)}>+</button>
+          <button className="qty-btn ${atMaxStock ? 'qty-btn-disabled' : ''}" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>-</button>
+            <input
+              className="qty-input"
+              type="number"
+              min="1"
+              max={maxQty}
+              value={item.quantity}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (isNaN(val) || val < 1) return;
+                if (val > maxQty) {
+                  onUpdateQty(item.id, maxQty);
+                  return;
+                }
+                onUpdateQty(item.id, val);
+              }}
+            />
+          <button className="qty-btn ${atMaxStock ? 'qty-btn-disabled' : ''}" onClick={() => onUpdateQty(item.id, item.quantity + 1) } disabled={item.quantity >= maxQty}>+</button>
         </div>
         <div className="cart-item-total">
           ₱{lineTotal.toFixed(2)}

@@ -135,3 +135,16 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+.product-stock-warning {
+  font-size: 0.75rem;
+  color: #e53e3e;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.size-btn-out {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

@@ -29,6 +29,97 @@ export default function Pos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  //computeeffectivestock added by russ - to compute stock remaining across different products...
+  const computeEffectiveStock = (product, allProducts, cartItems, targetSize = null) => {
+    if (!product.ingredientRequirements || product.ingredientRequirements.length === 0) {
+        return product.stock;
+    }
+    const reservedIngredients = {};
+
+    cartItems.forEach(cartItem => {
+        const cartProduct = allProducts.find(p => p.productID === cartItem.productId);
+        if (!cartProduct || !cartProduct.ingredientRequirements) return;
+
+        if (cartProduct.productType === 'simpleProduct') {
+            cartProduct.ingredientRequirements.forEach(req => {
+                reservedIngredients[req.ingredientID] =
+                    (reservedIngredients[req.ingredientID] || 0) +
+                    (req.quantityRequired * cartItem.quantity);
+            });
+        } else if (cartProduct.productType === 'drink') {
+            const variant = cartProduct.ingredientRequirements.find(
+                v => v.size === cartItem.size
+            );
+            if (variant) {
+                variant.ingredients.forEach(req => {
+                    reservedIngredients[req.ingredientID] =
+                        (reservedIngredients[req.ingredientID] || 0) +
+                        (req.quantityRequired * cartItem.quantity);
+                });
+            }
+        } else if (cartProduct.productType === 'flavoredItem') {
+            const variant = cartProduct.ingredientRequirements.find(
+                v => v.flavorName === cartItem.size
+            );
+            if (variant) {
+                variant.ingredients.forEach(req => {
+                    reservedIngredients[req.ingredientID] =
+                        (reservedIngredients[req.ingredientID] || 0) +
+                        (req.quantityRequired * cartItem.quantity);
+                });
+            }
+        }
+    });
+
+    if (product.productType === 'simpleProduct') {
+        const capacities = product.ingredientRequirements
+            .filter(req => req.quantityRequired > 0)
+            .map(req => {
+                const reserved = reservedIngredients[req.ingredientID] || 0;
+                const remaining = req.stockQuantity - reserved;
+                return Math.max(0, Math.floor(remaining / req.quantityRequired));
+            });
+        return capacities.length ? Math.min(...capacities) : product.stock;
+
+    } else if (product.productType === 'drink') {
+        // If a targetSize is specified, only compute for that size
+        const relevantVariants = targetSize
+            ? product.ingredientRequirements.filter(v => v.size === targetSize)
+            : product.ingredientRequirements;
+
+        const variantCapacities = relevantVariants.map(variant => {
+            const caps = variant.ingredients
+                .filter(req => req.quantityRequired > 0)
+                .map(req => {
+                    const reserved = reservedIngredients[req.ingredientID] || 0;
+                    const remaining = req.stockQuantity - reserved;
+                    return Math.max(0, Math.floor(remaining / req.quantityRequired));
+                });
+            return caps.length ? Math.min(...caps) : Infinity;
+        });
+        return variantCapacities.length ? Math.min(...variantCapacities) : product.stock;
+
+    } else if (product.productType === 'flavoredItem') {
+        const relevantVariants = targetSize
+            ? product.ingredientRequirements.filter(v => v.flavorName === targetSize)
+            : product.ingredientRequirements;
+
+        const variantCapacities = relevantVariants.map(variant => {
+            const caps = variant.ingredients
+                .filter(req => req.quantityRequired > 0)
+                .map(req => {
+                    const reserved = reservedIngredients[req.ingredientID] || 0;
+                    const remaining = req.stockQuantity - reserved;
+                    return Math.max(0, Math.floor(remaining / req.quantityRequired));
+                });
+            return caps.length ? Math.min(...caps) : Infinity;
+        });
+        return variantCapacities.length ? Math.min(...variantCapacities) : product.stock;
+    }
+
+    return product.stock;
+};
+
   // UI state
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,12 +195,30 @@ export default function Pos() {
   }, [selectedCategory, searchQuery, products]);
 
   // Handle add to cart with feedback
-  const handleAddToCart = (product, quantity, size) => {
+  // trying to count the stock as products are order -russ
+const handleAddToCart = (product, quantity, size) => {
+    const effectiveStock = computeEffectiveStock(product, products, cartItems, size);
+    const alreadyInCart = cartItems
+        .filter(item => item.productId === product.productID && item.size === size)
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+            console.log('--- handleAddToCart ---');
+    console.log('size:', size);
+    console.log('effectiveStock for this size:', effectiveStock);
+    console.log('alreadyInCart for this size:', alreadyInCart);
+    console.log('quantity:', quantity);
+    console.log('would block?', alreadyInCart + quantity > effectiveStock);
+    console.log('cartItems snapshot:', JSON.stringify(cartItems.map(i => ({ size: i.size, qty: i.quantity, id: i.id }))));
+
+    if (quantity > effectiveStock) {
+        return;
+    }
+
     addToCart(product, quantity, size);
     setAddFeedbackText(`${product.name} (${size}) added to cart!`);
     setShowAddFeedback(true);
     setTimeout(() => setShowAddFeedback(false), 2000);
-  };
+};
 
   // Handle payment modal opening
   const handleOpenPaymentModal = () => {
@@ -194,15 +303,31 @@ export default function Pos() {
             <div className="products-container">
               <div className="products-grid">
                 {filteredProducts.length > 0 ? (
-                  filteredProducts.map(product => (
-                    <ProductCard
-                      key={product.productID}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                    />
-                  ))
+                    filteredProducts.map(product => {
+                      const sizeStockMap = {};
+                          if (product.productType === 'drink') {
+                              product.ingredientRequirements?.forEach(variant => {
+                                  sizeStockMap[variant.size] = computeEffectiveStock(product, products, cartItems, variant.size);
+                              });
+                          } else if (product.productType === 'flavoredItem') {
+                              product.ingredientRequirements?.forEach(variant => {
+                                  sizeStockMap[variant.flavorName] = computeEffectiveStock(product, products, cartItems, variant.flavorName);
+                              });
+                          } else {
+                              // simpleProduct — single entry
+                              sizeStockMap['Standard'] = computeEffectiveStock(product, products, cartItems);
+                          }
+                        return (
+                            <ProductCard
+                                key={product.productID}
+                                product={product}
+                                onAddToCart={handleAddToCart}
+                                sizeStockMap={sizeStockMap}
+                            />
+                        );
+                    })
                 ) : (
-                  <div className="no-products">No products found</div>
+                    <div className="no-products">No products found</div>
                 )}
               </div>
             </div>
@@ -222,20 +347,41 @@ export default function Pos() {
               {cartItems.length > 0 ? (
                 <div>
                   {cartItems.map(item => {
-                    const product = products.find(p => p.productID === item.productId);
-                    const availableAddOns = product ? getAvailableAddOnsForProduct(product) : [];
-                    
-                    return (
-                      <CartItemRow
-                        key={item.id}
-                        item={item}
-                        onRemove={removeFromCart}
-                        onUpdateQty={updateQuantity}
-                        onToggleAddOn={toggleAddOn}
-                        availableAddOns={availableAddOns}
-                        showAddOnsExpandable={availableAddOns.length > 0}
-                      />
-                    );
+                      const product = products.find(p => p.productID === item.productId);
+                      const effectiveStock = product
+                          ? computeEffectiveStock(product, products, cartItems, item.size)
+                          : Infinity;
+
+                      //Each rows qty is totalled
+                      const otherRowsQty = cartItems
+                          .filter(i => i.productId === item.productId && i.size === item.size && i.id !== item.id)
+                          .reduce((sum, i) => sum + i.quantity, 0);
+
+                      const availableAddOns = product ? getAvailableAddOnsForProduct(product) : [];
+                      const maxQty = Number.isFinite(effectiveStock)
+                          ? effectiveStock  + item.quantity
+                          : Infinity;
+
+                      const originalStock = product
+                        ? computeEffectiveStock(product, products, [], item.size)
+                        : maxQty;
+
+                      return (
+                          <CartItemRow
+                              key={item.id}
+                              item={item}
+                              onRemove={removeFromCart}
+                              onUpdateQty={(itemId, newQty) => {
+                                  if (newQty > maxQty) return;
+                                  updateQuantity(itemId, newQty);
+                              }}
+                              onToggleAddOn={toggleAddOn}
+                              availableAddOns={availableAddOns}
+                              showAddOnsExpandable={availableAddOns.length > 0}
+                              maxQty={maxQty}
+                              totalStock={originalStock}
+                          />
+                      );
                   })}
                 </div>
               ) : (

@@ -169,3 +169,32 @@
   color: var(--accent-gold);
   font-weight: 600;
 }
+
+.cart-item-stock-warning {
+  font-size: 0.75rem;
+  color: #e53e3e;
+  margin-top: 2px;
+}
+
+.qty-btn-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qty-input {
+  width: 36px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  background: transparent;
+  border: none;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

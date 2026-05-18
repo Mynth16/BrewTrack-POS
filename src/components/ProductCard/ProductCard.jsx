@@ -1,9 +1,19 @@
 import { useState } from 'react';
 import './ProductCard.css';
 
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({ product, onAddToCart, sizeStockMap = {} }) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]?.label || null);
-  const isOutOfStock = product.stock === 0;
+  const allSizesOutOfStock = product.sizes.every(size => {
+    const stock = size.label in sizeStockMap ? sizeStockMap[size.label] : (product.stock ?? 0);
+    return stock === 0;
+  });
+
+
+  const currentStock = selectedSize in sizeStockMap
+      ? sizeStockMap[selectedSize]
+      : (product.stock ?? 0);
+
+  const isOutOfStock = currentStock === 0;
 
   const handleAddClick = () => {
     if (!isOutOfStock && selectedSize) {
@@ -15,7 +25,7 @@ export default function ProductCard({ product, onAddToCart }) {
   const selectedPrice = selectedSizeObj ? selectedSizeObj.price : 0;
 
   return (
-    <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
+    <div className={`product-card ${allSizesOutOfStock ? 'out-of-stock' : ''}`}>
       <div className="product-image">
         <img src={product.image || '/products/default.png'} alt={product.name} onError={(e) => { e.target.src = '/products/default.png'; }} />
       </div>
@@ -25,29 +35,36 @@ export default function ProductCard({ product, onAddToCart }) {
         
         {product.sizes.length > 0 && (
           <div className="product-sizes">
-            {product.sizes.map(size => (
-              <button
-                key={size.label}
-                className={`size-btn ${selectedSize === size.label ? 'active' : ''}`}
-                onClick={() => setSelectedSize(size.label)}
-                disabled={isOutOfStock}
-              >
-                {size.label}
-              </button>
-            ))}
+            {product.sizes.map(size => {
+              const sizeStock = size.label in sizeStockMap
+                  ? sizeStockMap[size.label]
+                  : (product.stock ?? 0);
+              const sizeOutOfStock = sizeStock === 0;
+              return (
+                  <button
+                      key={size.label}
+                      className={`size-btn ${selectedSize === size.label ? 'active' : ''} ${sizeOutOfStock ? 'size-btn-out' : ''}`}
+                      onClick={() => !sizeOutOfStock && setSelectedSize(size.label)}
+                      disabled={sizeOutOfStock}
+                      title={sizeOutOfStock ? 'Out of stock' : `${sizeStock} available`}
+                  >
+                      {size.label}
+                  </button>
+              );
+            })}
           </div>
         )}
         
         <div className="product-price">
           ₱{selectedPrice.toFixed(2)}
         </div>
-        
+
         <button
           className="add-to-cart-btn"
           onClick={handleAddClick}
           disabled={isOutOfStock}
         >
-          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+        {allSizesOutOfStock ? 'Out of Stock' : isOutOfStock ? 'Size Unavailable' : 'Add to Cart'}
         </button>
       </div>
     </div>

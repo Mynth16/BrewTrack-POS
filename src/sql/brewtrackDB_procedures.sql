@@ -107,6 +107,7 @@ BEGIN
             WHEN p.productType = 'flavoredItem' THEN (SELECT COUNT(*) FROM flavoredItem WHERE productID = p.productID)
         END AS variantCount
     FROM product p
+    WHERE p.isActive = 1
     ORDER BY p.category, p.productName;
 END$$
 
